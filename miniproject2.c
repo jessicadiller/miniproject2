@@ -9,6 +9,9 @@
 #include "timer.h"
 #include "oc.h"
 
+#define FALSE 0
+#define TRUE 1
+
 #define TOGGLE_LED1       1   // Vendor request that toggles LED 1 from on/off
 #define SET_DUTY          2
 #define GET_DUTY          3
@@ -63,7 +66,7 @@ void VendorRequests(void) {
             pin_write(&D[7], (uint16_t)USB_setup.wValue.w);
             pin_write(&D[8], 0x0);
 	    // below needed to finish all vendor requests
-            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0 
+            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case GET_DUTY:
@@ -94,6 +97,9 @@ void VendorRequests(void) {
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
+      /*case GET_CONTROL:
+            Define what control it's going to be.
+      */
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
     }
@@ -115,8 +121,30 @@ void VendorRequestsOut(void) {
 }
 
 //////////////////////////////Calculating Functions ////////////////////////////
+int set_zero_point(){
+  /* To be run during initialization - set the zero to be wherever the joystick is at startup
+  */
+}
 
-int EncoderToAngle(int encodervalue) {
+void set_pwm_duty(bool forward, uint16_t duty){
+  if (forward){
+    pin_write(&D[7], duty);
+    pin_write(&D[8], 0x0);
+  }
+  else{
+    pin_write(&D[8], duty);
+    pin_write(&D[7], 0x0);
+  }
+}
+
+int get_encoder_val(void){
+  /*Inputs:  None
+  Outputs:  Encoder value
+  see GET_ENC?
+  */
+}
+
+int encoder_to_angle(int encodervalue) {
     // Takes number from encoder, outputs an angle
     int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
     return angle;
@@ -128,6 +156,12 @@ int derivcalcs(s1,s2,t) {
   int deriv = (s2 - s1)/t;
   return deriv
 }
+
+int calc_torque(){
+  // Reads and calculates torque
+}
+
+
 
 /*
 Still need:
@@ -150,12 +184,36 @@ Need:
 * Texture
 */
 
-int wall(int position){
-  // Implement this
+int wall_control(int position){
+  // Implement this.  Torque happens at specific location
   int torque
   return torque
 }
 
+int spring_control(int position, int k, /*int setpt*/){
+  /*Inputs:  angular position, spring constant. zero set point maybe?
+  torque proportinal to -position
+  Output:  Desired torque
+  */
+}
+int damper_control(int speed, int k){
+  /* inputs:  angular speed, damping coefficient
+  Torque proportional to -speed
+  Output:  Desired Torque
+  */
+}
+
+int texture_control(int position){
+  /*Need to figure out what we want for torque.  Masking binary?
+  */
+}
+
+int pwm_control(int ideal, int real, int PWM_current){
+  /* inputs:  torque Ideal, torque real, torque PWM_current
+  Outputs:  new PWM duty cycle
+  */
+
+}
 /////////////////////////////Main Function////////////////////////////////////
 
 int16_t main(void) {
@@ -172,10 +230,10 @@ int16_t main(void) {
 
     pin_digitalOut(ANG_NCS);
     pin_set(ANG_NCS);
-    
+
     spi_open(&spi1, ANG_MISO, ANG_MOSI, ANG_SCK, 2e6, 1); //WHY ONE
 
-    oc_pwm(&oc1, &D[7], NULL, 10e3, 0x8000);
+    oc_pwm(&oc1, &D[7], NULL, 10e3, 0x8000);  // Pin, internal vs external timer, frequency, initial duty cycle
     oc_pwm(&oc2, &D[8], NULL, 10e3, 0x0);
 
     InitUSB();                              // initialize the USB registers and serial interface engine
@@ -188,7 +246,10 @@ int16_t main(void) {
         //get angle
         // get torque
         // get speed
-        // if statement or similar: check control state, run relevant control calculator
+        // using if statement or similar: check control state, run relevant control calculator
+        // Calculate the proper PWM from torque stuff
+        // Set variables we need next loop:
+          //Current position, current time, current PWM
     }
 }
 
