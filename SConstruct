@@ -20,12 +20,11 @@ env.Append(BUILDERS = {'List' : list})
 env.Program('angletest', ['angletest.c',
                          'descriptors.c', 
                          'usb.c', 
-                         './lib/ui.c',
-                         './lib/pin.c', 
-                         './lib/oc.c',
-                         './lib/spi.c',
-                         './lib/common.c',
-                         './lib/timer.c',
-                         './config.h'])
+                         '../lib/ui.c',
+                         '../lib/pin.c', 
+                         '../lib/oc.c',
+                         '../lib/spi.c',
+                         '../lib/common.c',
+                         '../lib/timer.c'])
 env.Hex('angletest')
 env.List('angletest')
