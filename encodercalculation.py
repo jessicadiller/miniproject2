@@ -28,7 +28,7 @@ def get_encoder_value():
     # f = open('workfile','r+')
     # print f
     angleBytes = ang.get_angle() #gets angle measurement in bytes
-    mask = 0x3FFF
+    #mask = 0x3FFF
     angle = int(angleBytes[0])+int(angleBytes[1])*256 #formats to integer
     # value = str(angle)
     # f.write(value + '; ')

@@ -80,5 +80,5 @@ class angletest:
         except usb.core.USBError:
             print "Could not send GET_CURRENT vendor request."
         else:
-            return int(ret[0])
+            return ret
 
