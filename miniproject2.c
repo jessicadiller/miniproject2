@@ -18,7 +18,8 @@
 #define GET_ANGLE         4
 #define GET_MAGNITUDE     5
 #define GET_ENC           6
-#define SET_CONTROLLER	  7
+#define GET_CURRENT       7
+#define SET_CONTROLLER	  8
 
 #define REG_ANG_ADDR      0x3FFF
 #define REG_MAG_ADDR      0x3FFE
@@ -113,11 +114,11 @@ void VendorRequests(void) {
             Define what control it's going to be.
       */
 
-	case SET_CONTROLLER: 
-	    control_state = (int)USB_setup.wValue.w;
-	    BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 2
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-	    break; 
+      	case SET_CONTROLLER: 
+      	    control_state = (int)USB_setup.wValue.w;  //changing global variable
+      	          BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 2
+                  BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+      	    break; 
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
     }
@@ -185,19 +186,15 @@ void set_pwm_duty(bool forward, uint16_t duty){
   }
 }
 
-int get_encoder_val_angle(void){
+uint16_t get_encoder_val_angle(void){
   /*Inputs:  None
   Outputs:  Encoder value
   see GET_ENC?
   Gets encoder value from the angle address
   */
-  angle = enc_read_reg((WORD)REG_ANG_ADDR);
-  angle.b[0]&SENSOR_MASK;
-  BD[EP0IN].address[0] = angle.b[0];
-  BD[EP0IN].address[1] = angle.b[1];
-  BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-  BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-  break;
+  WORD angle = enc_read_reg((WORD)REG_ANG_ADDR);
+  angle.b[0] = angle.b[0]&SENSOR_MASK;
+  return(angle)
 }
 
 int get_encoder_val_mag(void){
@@ -206,13 +203,9 @@ int get_encoder_val_mag(void){
   see GET_ENC?
   Gets encoder value from the magnitute address
   */
-  angle = enc_read_reg((WORD)REG_MAG_ADDR);
-  angle.b[0]&SENSOR_MASK;
-  BD[EP0IN].address[0] = angle.b[0];
-  BD[EP0IN].address[1] = angle.b[1];
-  BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-  BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-  break;
+  WORD angle = enc_read_reg((WORD)REG_MAG_ADDR);
+  angle.b[0] = angle.b[0]&SENSOR_MASK;
+  return(angle)
 }
 
 int encoderToAngle(int encodervalue) {
@@ -344,15 +337,24 @@ int16_t main(void) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
         angle = getAngle(); 
-	torque = getTorque(); 
-	speed = getSpeed(); 
+	       torque = getTorque(); 
+	        speed = getSpeed(); 
+
+          switch (control_state){
+            case 0: //No controller
+              break;
+            case 1: // Wall
+              wall_control
+              break;
+            default: // No controller
+              break;
+          }
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:
           //Current position, current time, current PWM
-	
-	// WALL TEST CASE
-	wall_control(); 
+      	// WALL TEST CASE
+      	wall_control(); 
 
     }
 }
