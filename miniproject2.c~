@@ -23,11 +23,13 @@
 #define REG_ANG_ADDR      0x3FFF
 #define REG_MAG_ADDR      0x3FFE
 
+<<<<<<< Updated upstream
 #define SENSOR_MASK       0X3F
 #define ANALOG_MASK       0XC0
 #define KONSTANT          0x4
-
+=======
 int control_state, wall_thresh;
+>>>>>>> Stashed changes
 
 //uint16_t val1, val2;
 
@@ -108,16 +110,17 @@ void VendorRequests(void) {
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
-
+<<<<<<< Updated upstream
       /*case GET_CONTROL:
             Define what control it's going to be.
       */
-
+=======
 	case SET_CONTROLLER: 
 	    control_state = (int)USB_setup.wValue.w;
 	    BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
 	    break; 
+>>>>>>> Stashed changes
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
     }
@@ -152,29 +155,13 @@ void setDuty(){
     pin_write(&D[8], 0x0);
 }
 
-int getAngle(){
-    int ang;
-    return ang;
-}
-
-int getTorque(){
-    return; 
-}
-
-int getSpeed(){
-    return; 
-}
 //////////////////////////////Calculating Functions ////////////////////////////
 int set_zero_point(){
   /* To be run during initialization - set the zero to be wherever the joystick is at startup
   */
-  zero_pt_enc = get_encoder_val_angle();
-  zero_pt = encoder_to_angle(zero_pt_enc);
-  return zero_pt;
 }
 
 void set_pwm_duty(bool forward, uint16_t duty){
-  // Need to edit to take unsigned int for duty and no boolean.
   if (forward){
     pin_write(&D[7], duty);
     pin_write(&D[8], 0x0);
@@ -185,50 +172,21 @@ void set_pwm_duty(bool forward, uint16_t duty){
   }
 }
 
-int get_encoder_val_angle(void){
+<<<<<<< Updated upstream
+int get_encoder_val(void){
   /*Inputs:  None
   Outputs:  Encoder value
   see GET_ENC?
-  Gets encoder value from the angle address
   */
-  angle = enc_read_reg((WORD)REG_ANG_ADDR);
-  angle.b[0]&SENSOR_MASK;
-  BD[EP0IN].address[0] = angle.b[0];
-  BD[EP0IN].address[1] = angle.b[1];
-  BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-  BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-  break;
 }
 
-int get_encoder_val_mag(void){
-  /*Inputs:  None
-  Outputs:  Encoder value
-  see GET_ENC?
-  Gets encoder value from the magnitute address
-  */
-  angle = enc_read_reg((WORD)REG_MAG_ADDR);
-  angle.b[0]&SENSOR_MASK;
-  BD[EP0IN].address[0] = angle.b[0];
-  BD[EP0IN].address[1] = angle.b[1];
-  BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-  BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-  break;
-}
-
+int encoder_to_angle(int encodervalue) {
+=======
 int encoderToAngle(int encodervalue) {
+>>>>>>> Stashed changes
     // Takes number from encoder, outputs an angle
     int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
     return angle;
-}
-
-int relative_angle(int calc_angle, int initial_angle){
-  raw_diff = calc_angle-initial_angle;
-  if (abs(raw_diff)>100){
-    actual_diff = raw_diff - 360;
-    return actual_diff;
-  }
-  return raw_diff;
-  }
 }
 
 int derivcalcs(s1,s2,t) {
@@ -236,6 +194,7 @@ int derivcalcs(s1,s2,t) {
   // Can calculate speed (from two positions) and acceleration (from two speeds)
   int deriv = (s2 - s1)/t;
   return deriv;
+<<<<<<< Updated upstream
 }
 
 float calc_torque(){
@@ -246,12 +205,14 @@ float calc_torque(){
 
     vout.w = pin_read(CURR_P); //reads analog pin
     vout.b[1]&ANALOG_MASK; //masks last 6 digits
-    vout.b[0] = vout.b[0]*256 
+    vout.b[0] = vout.b[0]*(2^8); 
     realvout = vout.b[0]+vout.b[1]; //combines bytes into integer
     realvout = (realvout*3.3)/65535; //normalization
     current = (realvout - 1.6) * 0.075;
     torque = KONSTANT * current;
     return torque;
+=======
+>>>>>>> Stashed changes
 }
 
 
@@ -277,15 +238,22 @@ Need:
 * Texture
 */
 
-
-signed int wall_control(int position){
-    // input current angle, ouput desired torque (PWM) 
-    signed int torque = getTorque(); 
+<<<<<<< Updated upstream
+int wall_control(int position){
+  // Implement this.  Torque happens at specific location
+  int torque
+  return torque
+=======
+int wall(angle_pos){
+// input current angle, ouput desired torque (PWM) 
+    // Implement this
+    int torque;
     threshold = getWallThresh();
-    if (position >= threshold){
-	torque = -1 * torque; 
+    if (angle_pos > threshold){
+	set_duty(
     } 
     return torque;
+>>>>>>> Stashed changes
 }
 
 int spring_control(int position, int k, /*int setpt*/){
@@ -306,9 +274,10 @@ int texture_control(int position){
   */
 }
 
-int pwm_control(int ideal, int real, int duty_cycle){
-  int 
-  return new_duty
+int pwm_control(int ideal, int real, int PWM_current){
+  /* inputs:  torque Ideal, torque real, torque PWM_current
+  Outputs:  new PWM duty cycle
+  */
 
 }
 /////////////////////////////Main Function////////////////////////////////////
@@ -342,17 +311,13 @@ int16_t main(void) {
     while (1) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
-        angle = getAngle(); 
-	torque = getTorque(); 
-	speed = getSpeed(); 
+        //get angle
+        // get torque
+        // get speed
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:
           //Current position, current time, current PWM
-	
-	// WALL TEST CASE
-	wall_control(); 
-
     }
 }
 
