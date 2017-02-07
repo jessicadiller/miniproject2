@@ -153,15 +153,6 @@ void setDuty(){
     pin_write(&D[8], 0x0);
 }
 
-int getAngle(){
-    int ang;
-    return ang;
-}
-
-int getTorque(){
-    return; 
-}
-
 int getSpeed(){
     return; 
 }
@@ -209,6 +200,7 @@ int get_encoder_val_mag(void){
 }
 
 int encoderToAngle(int encodervalue) {
+
     // Takes number from encoder, outputs an angle
     int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
     return angle;
@@ -239,7 +231,7 @@ float calc_torque(){
 
     vout.w = pin_read(CURR_P); //reads analog pin
     vout.b[1]&ANALOG_MASK; //masks last 6 digits
-    vout.b[0] = vout.b[0]*(2^8); 
+    vout.b[0] = vout.b[0]*256 
     realvout = vout.b[0]+vout.b[1]; //combines bytes into integer
     realvout = (realvout*3.3)/65535; //normalization
     current = (realvout - 1.6) * 0.075;
@@ -273,7 +265,7 @@ Need:
 
 signed int wall_control(int position){
     // input current angle, ouput desired torque (PWM) 
-    signed int torque = getTorque(); 
+    signed int torque = calcTorque(); 
     threshold = getWallThresh();
     if (position >= threshold){
 	torque = -1 * torque; 
@@ -299,10 +291,9 @@ int texture_control(int position){
   */
 }
 
-int pwm_control(int ideal, int real, int PWM_current){
-  /* inputs:  torque Ideal, torque real, torque PWM_current
-  Outputs:  new PWM duty cycle
-  */
+int pwm_control(int ideal, int real, int duty_cycle){
+  int 
+  return new_duty
 
 }
 /////////////////////////////Main Function////////////////////////////////////
@@ -349,6 +340,7 @@ int16_t main(void) {
             default: // No controller
               break;
           }
+
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:
