@@ -159,9 +159,13 @@ int getSpeed(){
 int set_zero_point(){
   /* To be run during initialization - set the zero to be wherever the joystick is at startup
   */
+  zero_pt_enc = get_encoder_val_angle();
+  zero_pt = encoder_to_angle(zero_pt_enc);
+  return zero_pt;
 }
 
 void set_pwm_duty(bool forward, uint16_t duty){
+  // Need to edit to take unsigned int for duty and no boolean.
   if (forward){
     pin_write(&D[7], duty);
     pin_write(&D[8], 0x0);
@@ -179,9 +183,22 @@ int getAngle(void){
     */
     int encodervalue; 
     encodervalue = enc_read_reg(REG_ANG_ADDR); 
+    angle.b[0]&SENSOR_MASK;
+    BD[EP0IN].address[0] = angle.b[0];
+    BD[EP0IN].address[1] = angle.b[1];
     // Takes number from encoder, outputs an angle
     int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
     return angle;
+}
+
+int relative_angle(int calc_angle, int initial_angle){
+  raw_diff = calc_angle-initial_angle;
+  if (abs(raw_diff)>100){
+    actual_diff = raw_diff - 360;
+    return actual_diff;
+  }
+  return raw_diff;
+  }
 }
 
 int derivcalcs(s1,s2,t) {
