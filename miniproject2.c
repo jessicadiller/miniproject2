@@ -22,6 +22,10 @@
 #define REG_ANG_ADDR      0x3FFF
 #define REG_MAG_ADDR      0x3FFE
 
+#define SENSOR_MASK       0X3F
+#define ANALOG_MASK       0XC0
+#define KONSTANT          0x4
+
 //uint16_t val1, val2;
 
 //void ClassRequests(void) {
@@ -33,6 +37,7 @@
 
 _PIN *ANG_SCK, *ANG_MISO, *ANG_MOSI;
 _PIN *ANG_NCS;
+_PIN *CURR_P;
 
 WORD enc_read_reg(WORD address) {
     WORD cmd, angle;
@@ -78,6 +83,7 @@ void VendorRequests(void) {
             break;
         case GET_ANGLE:
             angle = enc_read_reg((WORD)REG_ANG_ADDR);
+            angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
@@ -85,6 +91,7 @@ void VendorRequests(void) {
             break;
         case GET_MAGNITUDE:
             angle = enc_read_reg((WORD)REG_MAG_ADDR);
+            angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
@@ -92,6 +99,7 @@ void VendorRequests(void) {
             break;
         case GET_ENC:
             angle = enc_read_reg(USB_setup.wValue);
+            angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
@@ -154,11 +162,23 @@ int derivcalcs(s1,s2,t) {
   // Takes two values and the time between them, and outputs the derivative
   // Can calculate speed (from two positions) and acceleration (from two speeds)
   int deriv = (s2 - s1)/t;
-  return deriv
+  return deriv;
 }
 
-int calc_torque(){
-  // Reads and calculates torque
+float calc_torque(){
+    WORD vout;
+    float realvout;
+    float current;
+    float torque;
+
+    vout.w = pin_read(CURR_P); //reads analog pin
+    vout.b[1]&ANALOG_MASK; //masks last 6 digits
+    vout.b[0] = vout.b[0]*(2^8); 
+    realvout = vout.b[0]+vout.b[1]; //combines bytes into integer
+    realvout = (realvout*3.3)/65535; //normalization
+    current = (realvout - 1.6) * 0.075;
+    torque = KONSTANT * current;
+    return torque;
 }
 
 
@@ -227,7 +247,9 @@ int16_t main(void) {
     ANG_MISO = &D[1];
     ANG_SCK = &D[2];
     ANG_NCS = &D[3];
+    CURR_P = &A[0];
 
+    pin_analogIn(CURR_P);
     pin_digitalOut(ANG_NCS);
     pin_set(ANG_NCS);
 
