@@ -23,13 +23,11 @@
 #define REG_ANG_ADDR      0x3FFF
 #define REG_MAG_ADDR      0x3FFE
 
-<<<<<<< Updated upstream
 #define SENSOR_MASK       0X3F
 #define ANALOG_MASK       0XC0
 #define KONSTANT          0x4
-=======
+
 int control_state, wall_thresh;
->>>>>>> Stashed changes
 
 //uint16_t val1, val2;
 
@@ -110,17 +108,16 @@ void VendorRequests(void) {
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
-<<<<<<< Updated upstream
+
       /*case GET_CONTROL:
             Define what control it's going to be.
       */
-=======
+
 	case SET_CONTROLLER: 
 	    control_state = (int)USB_setup.wValue.w;
 	    BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
 	    break; 
->>>>>>> Stashed changes
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
     }
@@ -155,6 +152,9 @@ void setDuty(){
     pin_write(&D[8], 0x0);
 }
 
+int getSpeed(){
+    return; 
+}
 //////////////////////////////Calculating Functions ////////////////////////////
 int set_zero_point(){
   /* To be run during initialization - set the zero to be wherever the joystick is at startup
@@ -172,21 +172,15 @@ void set_pwm_duty(bool forward, uint16_t duty){
   }
 }
 
-<<<<<<< Updated upstream
-int get_encoder_val(void){
+int getAngle(void){
   /*Inputs:  None
   Outputs:  Encoder value
   see GET_ENC?
   */
-}
-
-int encoder_to_angle(int encodervalue) {
-=======
-int encoderToAngle(int encodervalue) {
->>>>>>> Stashed changes
-    // Takes number from encoder, outputs an angle
-    int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
-    return angle;
+  int encodervalue; 
+  // Takes number from encoder, outputs an angle
+  int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
+  return angle;
 }
 
 int derivcalcs(s1,s2,t) {
@@ -194,7 +188,6 @@ int derivcalcs(s1,s2,t) {
   // Can calculate speed (from two positions) and acceleration (from two speeds)
   int deriv = (s2 - s1)/t;
   return deriv;
-<<<<<<< Updated upstream
 }
 
 float calc_torque(){
@@ -211,8 +204,6 @@ float calc_torque(){
     current = (realvout - 1.6) * 0.075;
     torque = KONSTANT * current;
     return torque;
-=======
->>>>>>> Stashed changes
 }
 
 
@@ -238,22 +229,15 @@ Need:
 * Texture
 */
 
-<<<<<<< Updated upstream
-int wall_control(int position){
-  // Implement this.  Torque happens at specific location
-  int torque
-  return torque
-=======
-int wall(angle_pos){
-// input current angle, ouput desired torque (PWM) 
-    // Implement this
-    int torque;
+
+signed int wall_control(int position){
+    // input current angle, ouput desired torque (PWM) 
+    signed int torque = calcTorque(); 
     threshold = getWallThresh();
-    if (angle_pos > threshold){
-	set_duty(
+    if (position >= threshold){
+	torque = -1 * torque; 
     } 
     return torque;
->>>>>>> Stashed changes
 }
 
 int spring_control(int position, int k, /*int setpt*/){
@@ -311,13 +295,17 @@ int16_t main(void) {
     while (1) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
-        //get angle
-        // get torque
-        // get speed
+        angle = getAngle(); 
+	torque = calcTorque(); 
+	speed = getSpeed(); 
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:
           //Current position, current time, current PWM
+	
+	// WALL TEST CASE
+	wall_control(); 
+
     }
 }
 
