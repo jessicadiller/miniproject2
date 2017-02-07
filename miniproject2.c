@@ -152,15 +152,6 @@ void setDuty(){
     pin_write(&D[8], 0x0);
 }
 
-int getAngle(){
-    int ang;
-    return ang;
-}
-
-int getTorque(){
-    return; 
-}
-
 int getSpeed(){
     return; 
 }
@@ -185,37 +176,16 @@ void set_pwm_duty(bool forward, uint16_t duty){
   }
 }
 
-int get_encoder_val_angle(void){
-  /*Inputs:  None
-  Outputs:  Encoder value
-  see GET_ENC?
-  Gets encoder value from the angle address
-  */
-  angle = enc_read_reg((WORD)REG_ANG_ADDR);
-  angle.b[0]&SENSOR_MASK;
-  BD[EP0IN].address[0] = angle.b[0];
-  BD[EP0IN].address[1] = angle.b[1];
-  BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-  BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-  break;
-}
-
-int get_encoder_val_mag(void){
-  /*Inputs:  None
-  Outputs:  Encoder value
-  see GET_ENC?
-  Gets encoder value from the magnitute address
-  */
-  angle = enc_read_reg((WORD)REG_MAG_ADDR);
-  angle.b[0]&SENSOR_MASK;
-  BD[EP0IN].address[0] = angle.b[0];
-  BD[EP0IN].address[1] = angle.b[1];
-  BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-  BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-  break;
-}
-
-int encoderToAngle(int encodervalue) {
+int getAngle(void){
+    /*Inputs:  None
+    Outputs:  Encoder value
+    see GET_ENC?
+    */
+    int encodervalue; 
+    encodervalue = enc_read_reg(REG_ANG_ADDR); 
+    angle.b[0]&SENSOR_MASK;
+    BD[EP0IN].address[0] = angle.b[0];
+    BD[EP0IN].address[1] = angle.b[1];
     // Takes number from encoder, outputs an angle
     int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
     return angle;
@@ -280,7 +250,7 @@ Need:
 
 signed int wall_control(int position){
     // input current angle, ouput desired torque (PWM) 
-    signed int torque = getTorque(); 
+    signed int torque = calcTorque(); 
     threshold = getWallThresh();
     if (position >= threshold){
 	torque = -1 * torque; 
@@ -343,7 +313,7 @@ int16_t main(void) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
         angle = getAngle(); 
-	torque = getTorque(); 
+	torque = calcTorque(); 
 	speed = getSpeed(); 
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
