@@ -292,7 +292,11 @@ int texture_control(int position){
 }
 
 int pwm_control(int ideal, int real, int duty_cycle){
-  int 
+  int diff_torque;
+  int new_duty;
+  int constant_p = (1/3);
+  diff_torque = ideal - real;
+  new_duty = duty_cycle + (constant_p * diff_torque);
   return new_duty
 
 }
