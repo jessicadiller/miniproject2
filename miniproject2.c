@@ -56,6 +56,7 @@ WORD enc_read_reg(WORD address) {
     pin_clear(ANG_NCS);
     angle.b[1] = spi_transfer(&spi1, 0);
     angle.b[0] = spi_transfer(&spi1, 0);
+    angle.b[0]&SENSOR_MASK;
     pin_set(ANG_NCS);
     return angle;
 }
@@ -83,18 +84,23 @@ int set_zero_point(){
   return zero_pt;
 }
 
-/*void set_pwm_duty(bool forward, uint16_t duty){
+
+void set_pwm_duty(int duty){
   // Need to edit to take unsigned int for duty and no boolean.
-  if (forward){
+  if (duty>0){
     pin_write(&D[7], duty);
     pin_write(&D[8], 0x0);
   }
-  else{
+  else if (duty<0){
     pin_write(&D[8], duty);
     pin_write(&D[7], 0x0);
   }
+  else {
+    pin_write(&D[8], 0x0);
+    pin_write(&D[7], 0x0);
+  }
 }
-*/
+
 int get_encoder_val_angle(void){
   /*Inputs:  None
   Outputs:  Encoder value
@@ -351,7 +357,7 @@ int16_t main(void) {
               wall_control(angle); 
               break;
             default: // No controller
-	      wall_control(angle); 
+	             wall_control(angle); 
               break;
           }
 
