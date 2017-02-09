@@ -116,8 +116,8 @@ void VendorRequests(void) {
 
       	case SET_CONTROLLER: 
       	    control_state = (int)USB_setup.wValue.w;  //changing global variable
-      	          BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 2
-                  BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+      	    BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
       	    break; 
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
@@ -148,11 +148,6 @@ int getWallThreshold(){
     return wall_thresh; 
 }
 
-void setDuty(){
-    pin_write(&D[7], (uint16_t)USB_setup.wValue.w);
-    pin_write(&D[8], 0x0);
-}
-
 int getSpeed(){
     return; 
 }
@@ -160,6 +155,7 @@ int getSpeed(){
 int set_zero_point(){
   /* To be run during initialization - set the zero to be wherever the joystick is at startup
   */
+  int zero_pt_enc, zero_pt; 
   zero_pt_enc = get_encoder_val_angle();
   zero_pt = encoder_to_angle(zero_pt_enc);
   return zero_pt;
@@ -177,15 +173,17 @@ void set_pwm_duty(bool forward, uint16_t duty){
   }
 }
 
-uint16_t get_encoder_val_angle(void){
+int get_encoder_val_angle(void){
   /*Inputs:  None
   Outputs:  Encoder value
   see GET_ENC?
   Gets encoder value from the angle address
   */
-  WORD angle = enc_read_reg((WORD)REG_ANG_ADDR);
-  angle.b[0] = angle.b[0]&SENSOR_MASK;
-  return(angle)
+  WORD angle; 
+  angle.w = enc_read_reg((WORD)REG_ANG_ADDR);
+  angle.b[0] = angle.b[0];
+  angle.b[1] = angle.b[1];
+  return int(angle.b[0])+int(angle.b[1])*256; 
 }
 
 int get_encoder_val_mag(void){
@@ -195,8 +193,9 @@ int get_encoder_val_mag(void){
   Gets encoder value from the magnitute address
   */
   WORD angle = enc_read_reg((WORD)REG_MAG_ADDR);
-  angle.b[0] = angle.b[0]&SENSOR_MASK;
-  return(angle)
+  angle.b[0] = angle.b[0];
+  angle.b[1] = angle.b[1];
+  return int(angle.b[0])+int(angle.b[1])*256; 
 }
 
 int encoderToAngle(int encodervalue) {
@@ -207,13 +206,13 @@ int encoderToAngle(int encodervalue) {
 }
 
 int relative_angle(int calc_angle, int initial_angle){
-  raw_diff = calc_angle-initial_angle;
+  int actual_diff;
+  int raw_diff = calc_angle-initial_angle;
   if (abs(raw_diff)>100){
     actual_diff = raw_diff - 360;
     return actual_diff;
   }
   return raw_diff;
-  }
 }
 
 int derivcalcs(s1,s2,t) {
@@ -231,7 +230,7 @@ float calc_torque(){
 
     vout.w = pin_read(CURR_P); //reads analog pin
     vout.b[1]&ANALOG_MASK; //masks last 6 digits
-    vout.b[0] = vout.b[0]*256 
+    vout.b[0] = vout.b[0]*256; 
     realvout = vout.b[0]+vout.b[1]; //combines bytes into integer
     realvout = (realvout*3.3)/65535; //normalization
     current = (realvout - 1.6) * 0.075;
@@ -266,11 +265,21 @@ Need:
 signed int wall_control(int position){
     // input current angle, ouput desired torque (PWM) 
     signed int torque = calcTorque(); 
+    signed int ideal, pwm, threshold; 
+    WORD duty;
     threshold = getWallThresh();
+    duty.w = pin_read(&D[7]); 
+    if (duty.w == 0x0){
+      duty.w = pin_read(&D[8]);
+    }
+    duty.b[1] = duty.b[1]*256;
+    duty.b[0] = duty.b[0]*256; 
+    pwm = duty.b[0]+duty.b[1]; //combines bytes into integer
     if (position >= threshold){
-	torque = -1 * torque; 
+	   ideal = -1 * torque; 
     } 
-    return torque;
+    pwm = pwm_control(ideal, torque, pwm);
+    return pwm;
 }
 
 int spring_control(int position, int k, /*int setpt*/){
@@ -278,17 +287,20 @@ int spring_control(int position, int k, /*int setpt*/){
   torque proportinal to -position
   Output:  Desired torque
   */
+  return 0;
 }
 int damper_control(int speed, int k){
   /* inputs:  angular speed, damping coefficient
   Torque proportional to -speed
   Output:  Desired Torque
   */
+  return 0; 
 }
 
 int texture_control(int position){
   /*Need to figure out what we want for torque.  Masking binary?
   */
+  return 0;
 }
 
 int pwm_control(int ideal, int real, int duty_cycle){
@@ -297,7 +309,7 @@ int pwm_control(int ideal, int real, int duty_cycle){
   int constant_p = (1/3);
   diff_torque = ideal - real;
   new_duty = duty_cycle + (constant_p * diff_torque);
-  return new_duty
+  return new_duty;
 
 }
 /////////////////////////////Main Function////////////////////////////////////
@@ -324,24 +336,26 @@ int16_t main(void) {
     oc_pwm(&oc1, &D[7], NULL, 10e3, 0x8000);  // Pin, internal vs external timer, frequency, initial duty cycle
     oc_pwm(&oc2, &D[8], NULL, 10e3, 0x0);
 
-    InitUSB();                              // initialize the USB registers and serial interface engine
+    InitUSB();
+
+    int angle;                               // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
         ServiceUSB();                       // ...service USB requests
     }
     while (1) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
-        angle = getAngle(); 
-	       torque = getTorque(); 
-	        speed = getSpeed(); 
-
+        angle = get_encoder_val_angle(); 
+	      angle = encoderToAngle(angle); 
+        setWallThreshold(2500);
           switch (control_state){
             case 0: //No controller
               break;
             case 1: // Wall
-              wall_control
+              wall_control(angle); 
               break;
             default: // No controller
+	      wall_control(angle); 
               break;
           }
 
@@ -349,8 +363,6 @@ int16_t main(void) {
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:
           //Current position, current time, current PWM
-      	// WALL TEST CASE
-      	wall_control(); 
 
     }
 }
