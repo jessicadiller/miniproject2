@@ -20,6 +20,8 @@
 #define GET_ENC           6
 #define GET_CURRENT       7
 #define SET_CONTROLLER	  8
+#define WALL              9
+#define SET_WALL_THRESHOLD 10
 
 #define REG_ANG_ADDR      0x3FFF
 #define REG_MAG_ADDR      0x3FFE
@@ -161,7 +163,7 @@ float calc_torque(){
     return torque;
 }
 
-int pwm_control(int ideal, int real, int duty_cycle){
+int pwm_control(int ideal, float real, int duty_cycle){
   int diff_torque;
   int new_duty;
   int constant_p = (1/3);
@@ -294,7 +296,15 @@ void VendorRequests(void) {
             control_state = (int)USB_setup.wValue.w;  //changing global variable
             BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-            break; 
+            break;
+        case WALL: 
+            control_state = 1;
+            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+        case SET_WALL_THRESHOLD: 
+            set_wall_threshold((int)USB_setup.wValue.w);
+            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
     }

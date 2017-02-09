@@ -2,7 +2,7 @@
 import usb.core
 import time
 
-class angletest:
+class mp2:
 
     def __init__(self):
         self.TOGGLE_LED1 = 1
@@ -11,7 +11,10 @@ class angletest:
         self.GET_ANGLE = 4
         self.GET_MAGNITUDE = 5
         self.GET_ENC = 6
-	self.WALL = 7
+	self.GET_CURRENT = 7
+	self.SET_CONTROLLER = 8
+	self.WALL = 9
+	self.SET_WALL_THRESHOLD = 10
         self.dev = usb.core.find(idVendor = 0x6666, idProduct = 0x0003)
         if self.dev is None:
             raise ValueError('no USB device found matching idVendor = 0x6666 and idProduct = 0x0003')
@@ -79,5 +82,10 @@ class angletest:
 	    self.dev.ctrl_transfer(0x40, self.WALL)
 	except usb.core.USBError:
             print "Could not send SET_DUTY vendor request."
-
+ 
+    def set_wall_threshold(self, angle): 
+	try:
+	    self.dev.ctrl_transfer(0x40, self.SET_WALL_THRESHOLD, angle)
+	except usb.core.USBError:
+            print "Could not send SET_DUTY vendor request."
 
