@@ -62,16 +62,16 @@ WORD enc_read_reg(WORD address) {
 }
 
 //////////////////////////////Get & Set Functions ////////////////////////////
-void setWallThreshold(int anglepos){
+void set_wall_threshold(int anglepos){
     wall_thresh = anglepos; 
     return; 
 }
 
-int getWallThreshold(){
+int get_wall_threshold(){
     return wall_thresh; 
 }
 
-int getSpeed(){
+int get_speed(){
     return; 
 }
 //////////////////////////////Calculating Functions ////////////////////////////
