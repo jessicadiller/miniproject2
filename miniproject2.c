@@ -74,6 +74,33 @@ int get_wall_threshold(){
 int get_speed(){
     return; 
 }
+
+int get_encoder_val_angle(void){
+  /*Inputs:  None
+  Outputs:  Encoder value
+  see GET_ENC?
+  Gets encoder value from the angle address
+  */
+  WORD angle = enc_read_reg((WORD)REG_ANG_ADDR);
+  return (int)angle.b[0]+(int)angle.b[1]*256; 
+}
+
+int get_encoder_val_mag(void){
+  /*Inputs:  None
+  Outputs:  Encoder value
+  see GET_ENC?
+  Gets encoder value from the magnitute address
+  */
+  WORD angle = enc_read_reg((WORD)REG_MAG_ADDR);
+  return (int)angle.b[0]+(int)(angle.b[1])*256; 
+}
+
+int encoder_to_angle(int encodervalue) {
+
+    // Takes number from encoder, outputs an angle
+    int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
+    return angle;
+}
 //////////////////////////////Calculating Functions ////////////////////////////
 int set_zero_point(){
   /* To be run during initialization - set the zero to be wherever the joystick is at startup
@@ -101,33 +128,6 @@ void set_pwm_duty(int duty){
   }
 }
 
-int get_encoder_val_angle(void){
-  /*Inputs:  None
-  Outputs:  Encoder value
-  see GET_ENC?
-  Gets encoder value from the angle address
-  */
-  WORD angle = enc_read_reg((WORD)REG_ANG_ADDR);
-  return (int)angle.b[0]+(int)angle.b[1]*256; 
-}
-
-int get_encoder_val_mag(void){
-  /*Inputs:  None
-  Outputs:  Encoder value
-  see GET_ENC?
-  Gets encoder value from the magnitute address
-  */
-  WORD angle = enc_read_reg((WORD)REG_MAG_ADDR);
-  return (int)angle.b[0]+(int)(angle.b[1])*256; 
-}
-
-int encoderToAngle(int encodervalue) {
-
-    // Takes number from encoder, outputs an angle
-    int angle = (encodervalue - 16167)/(-47);  // Actual value is (x-16167)/46.59
-    return angle;
-}
-
 int relative_angle(int calc_angle, int initial_angle){
   int actual_diff;
   int raw_diff = calc_angle-initial_angle;
@@ -138,7 +138,7 @@ int relative_angle(int calc_angle, int initial_angle){
   return raw_diff;
 }
 
-int derivcalcs(s1,s2,t) {
+int deriv_calcs(s1,s2,t) {
   // Takes two values and the time between them, and outputs the derivative
   // Can calculate speed (from two positions) and acceleration (from two speeds)
   int deriv = (s2 - s1)/t;
@@ -161,7 +161,15 @@ float calc_torque(){
     return torque;
 }
 
+int pwm_control(int ideal, int real, int duty_cycle){
+  int diff_torque;
+  int new_duty;
+  int constant_p = (1/3);
+  diff_torque = ideal - real;
+  new_duty = duty_cycle + (constant_p * diff_torque);
+  return new_duty;
 
+}
 
 /*
 Still need:
@@ -187,10 +195,10 @@ Need:
 
 int wall_control(int position){
     // input current angle, ouput desired torque (PWM) 
-    int torque = calcTorque(); 
+    float torque = calc_torque(); 
     int ideal, pwm, threshold; 
     WORD duty;
-    threshold = getWallThresh();
+    threshold = get_wall_threshold();
     duty.w = pin_read(&D[7]); 
     if (duty.w == 0x0){
       duty.w = pin_read(&D[8]);
@@ -226,15 +234,7 @@ int texture_control(int position){
   return 0;
 }
 
-int pwm_control(int ideal, int real, int duty_cycle){
-  int diff_torque;
-  int new_duty;
-  int constant_p = (1/3);
-  diff_torque = ideal - real;
-  new_duty = duty_cycle + (constant_p * diff_torque);
-  return new_duty;
 
-}
 
 void VendorRequests(void) {
     WORD32 address;
@@ -348,8 +348,8 @@ int16_t main(void) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
         angle = get_encoder_val_angle(); 
-	      angle = encoderToAngle(angle); 
-        setWallThreshold(2500);
+	      angle = encoder_to_angle(angle); 
+        set_wall_threshold(2500);
           switch (control_state){
             case 0: //No controller
               break;
