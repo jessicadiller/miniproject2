@@ -60,84 +60,6 @@ WORD enc_read_reg(WORD address) {
     return angle;
 }
 
-void VendorRequests(void) {
-    WORD32 address;
-    WORD temp;
-    WORD angle;
-
-    switch (USB_setup.bRequest) {
-        case TOGGLE_LED1:
-            led_toggle(&led1);
-            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-            break;
-        case SET_DUTY:
-            pin_write(&D[7], (uint16_t)USB_setup.wValue.w);
-            pin_write(&D[8], 0x0);
-	    // below needed to finish all vendor requests
-            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-            break;
-        case GET_DUTY:
-            temp.w = pin_read(&D[7]);
-            BD[EP0IN].address[0] = temp.b[0];
-            BD[EP0IN].address[1] = temp.b[1];
-            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-            break;
-        case GET_ANGLE:
-            angle = enc_read_reg((WORD)REG_ANG_ADDR);
-            angle.b[0]&SENSOR_MASK;
-            BD[EP0IN].address[0] = angle.b[0];
-            BD[EP0IN].address[1] = angle.b[1];
-            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-            break;
-        case GET_MAGNITUDE:
-            angle = enc_read_reg((WORD)REG_MAG_ADDR);
-            angle.b[0]&SENSOR_MASK;
-            BD[EP0IN].address[0] = angle.b[0];
-            BD[EP0IN].address[1] = angle.b[1];
-            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-            break;
-        case GET_ENC:
-            angle = enc_read_reg(USB_setup.wValue);
-            angle.b[0]&SENSOR_MASK;
-            BD[EP0IN].address[0] = angle.b[0];
-            BD[EP0IN].address[1] = angle.b[1];
-            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-            break;
-
-      /*case GET_CONTROL:
-            Define what control it's going to be.
-      */
-
-      	case SET_CONTROLLER: 
-      	    control_state = (int)USB_setup.wValue.w;  //changing global variable
-      	    BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
-            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
-      	    break; 
-        default:
-            USB_error_flags |= 0x01;    // set Request Error Flag
-    }
-}
-
-void VendorRequestsIn(void) {
-
-    switch (USB_request.setup.bRequest) {
-        default:
-            USB_error_flags |= 0x01;                    // set Request Error Flag
-    }
-}
-
-void VendorRequestsOut(void) {
-    switch (USB_request.setup.bRequest) {
-        default:
-            USB_error_flags |= 0x01;                    // set Request Error Flag
-    }
-}
 //////////////////////////////Get & Set Functions ////////////////////////////
 void setWallThreshold(int anglepos){
     wall_thresh = anglepos; 
@@ -161,7 +83,7 @@ int set_zero_point(){
   return zero_pt;
 }
 
-void set_pwm_duty(bool forward, uint16_t duty){
+/*void set_pwm_duty(bool forward, uint16_t duty){
   // Need to edit to take unsigned int for duty and no boolean.
   if (forward){
     pin_write(&D[7], duty);
@@ -172,18 +94,15 @@ void set_pwm_duty(bool forward, uint16_t duty){
     pin_write(&D[7], 0x0);
   }
 }
-
+*/
 int get_encoder_val_angle(void){
   /*Inputs:  None
   Outputs:  Encoder value
   see GET_ENC?
   Gets encoder value from the angle address
   */
-  WORD angle; 
-  angle.w = enc_read_reg((WORD)REG_ANG_ADDR);
-  angle.b[0] = angle.b[0];
-  angle.b[1] = angle.b[1];
-  return int(angle.b[0])+int(angle.b[1])*256; 
+  WORD angle = enc_read_reg((WORD)REG_ANG_ADDR);
+  return (int)angle.b[0]+(int)angle.b[1]*256; 
 }
 
 int get_encoder_val_mag(void){
@@ -193,9 +112,7 @@ int get_encoder_val_mag(void){
   Gets encoder value from the magnitute address
   */
   WORD angle = enc_read_reg((WORD)REG_MAG_ADDR);
-  angle.b[0] = angle.b[0];
-  angle.b[1] = angle.b[1];
-  return int(angle.b[0])+int(angle.b[1])*256; 
+  return (int)angle.b[0]+(int)(angle.b[1])*256; 
 }
 
 int encoderToAngle(int encodervalue) {
@@ -262,10 +179,10 @@ Need:
 */
 
 
-signed int wall_control(int position){
+int wall_control(int position){
     // input current angle, ouput desired torque (PWM) 
-    signed int torque = calcTorque(); 
-    signed int ideal, pwm, threshold; 
+    int torque = calcTorque(); 
+    int ideal, pwm, threshold; 
     WORD duty;
     threshold = getWallThresh();
     duty.w = pin_read(&D[7]); 
@@ -282,7 +199,7 @@ signed int wall_control(int position){
     return pwm;
 }
 
-int spring_control(int position, int k, /*int setpt*/){
+int spring_control(int position, int k, int setpt){
   /*Inputs:  angular position, spring constant. zero set point maybe?
   torque proportinal to -position
   Output:  Desired torque
@@ -311,6 +228,85 @@ int pwm_control(int ideal, int real, int duty_cycle){
   new_duty = duty_cycle + (constant_p * diff_torque);
   return new_duty;
 
+}
+
+void VendorRequests(void) {
+    WORD32 address;
+    WORD temp;
+    WORD angle;
+
+    switch (USB_setup.bRequest) {
+        case TOGGLE_LED1:
+            led_toggle(&led1);
+            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;
+        case SET_DUTY:
+            pin_write(&D[7], (uint16_t)USB_setup.wValue.w);
+            pin_write(&D[8], 0x0);
+      // below needed to finish all vendor requests
+            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;
+        case GET_DUTY:
+            temp.w = pin_read(&D[7]);
+            BD[EP0IN].address[0] = temp.b[0];
+            BD[EP0IN].address[1] = temp.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;
+        case GET_ANGLE:
+            angle = enc_read_reg((WORD)REG_ANG_ADDR);
+            angle.b[0]&SENSOR_MASK;
+            BD[EP0IN].address[0] = angle.b[0];
+            BD[EP0IN].address[1] = angle.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;
+        case GET_MAGNITUDE:
+            angle = enc_read_reg((WORD)REG_MAG_ADDR);
+            angle.b[0]&SENSOR_MASK;
+            BD[EP0IN].address[0] = angle.b[0];
+            BD[EP0IN].address[1] = angle.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;
+        case GET_ENC:
+            angle = enc_read_reg(USB_setup.wValue);
+            angle.b[0]&SENSOR_MASK;
+            BD[EP0IN].address[0] = angle.b[0];
+            BD[EP0IN].address[1] = angle.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;
+
+      /*case GET_CONTROL:
+            Define what control it's going to be.
+      */
+
+        case SET_CONTROLLER: 
+            control_state = (int)USB_setup.wValue.w;  //changing global variable
+            BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break; 
+        default:
+            USB_error_flags |= 0x01;    // set Request Error Flag
+    }
+}
+
+void VendorRequestsIn(void) {
+
+    switch (USB_request.setup.bRequest) {
+        default:
+            USB_error_flags |= 0x01;                    // set Request Error Flag
+    }
+}
+
+void VendorRequestsOut(void) {
+    switch (USB_request.setup.bRequest) {
+        default:
+            USB_error_flags |= 0x01;                    // set Request Error Flag
+    }
 }
 /////////////////////////////Main Function////////////////////////////////////
 
