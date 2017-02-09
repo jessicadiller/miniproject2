@@ -56,6 +56,7 @@ WORD enc_read_reg(WORD address) {
     pin_clear(ANG_NCS);
     angle.b[1] = spi_transfer(&spi1, 0);
     angle.b[0] = spi_transfer(&spi1, 0);
+    angle.b[0]&SENSOR_MASK;
     pin_set(ANG_NCS);
     return angle;
 }
@@ -161,14 +162,18 @@ int set_zero_point(){
   return zero_pt;
 }
 
-void set_pwm_duty(bool forward, uint16_t duty){
+void set_pwm_duty(int duty){
   // Need to edit to take unsigned int for duty and no boolean.
-  if (forward){
+  if (duty>0){
     pin_write(&D[7], duty);
     pin_write(&D[8], 0x0);
   }
-  else{
+  else if (duty<0){
     pin_write(&D[8], duty);
+    pin_write(&D[7], 0x0);
+  }
+  else {
+    pin_write(&D[8], 0x0);
     pin_write(&D[7], 0x0);
   }
 }
@@ -179,11 +184,8 @@ int get_encoder_val_angle(void){
   see GET_ENC?
   Gets encoder value from the angle address
   */
-  WORD angle; 
-  angle.w = enc_read_reg((WORD)REG_ANG_ADDR);
-  angle.b[0] = angle.b[0];
-  angle.b[1] = angle.b[1];
-  return int(angle.b[0])+int(angle.b[1])*256; 
+  WORD angle = enc_read_reg((WORD)REG_ANG_ADDR);
+  return (int) angle.b[0] +((int) angle.b[1])*256;
 }
 
 int get_encoder_val_mag(void){
@@ -193,9 +195,7 @@ int get_encoder_val_mag(void){
   Gets encoder value from the magnitute address
   */
   WORD angle = enc_read_reg((WORD)REG_MAG_ADDR);
-  angle.b[0] = angle.b[0];
-  angle.b[1] = angle.b[1];
-  return int(angle.b[0])+int(angle.b[1])*256; 
+  return (int) angle.b[0] +((int) angle.b[1])*256;
 }
 
 int encoderToAngle(int encodervalue) {
@@ -282,7 +282,7 @@ signed int wall_control(int position){
     return pwm;
 }
 
-int spring_control(int position, int k, /*int setpt*/){
+int spring_control(int position, int k /*,int setpt*/){
   /*Inputs:  angular position, spring constant. zero set point maybe?
   torque proportinal to -position
   Output:  Desired torque
