@@ -30,7 +30,8 @@
 #define ANALOG_MASK       0XC0
 #define KONSTANT          0x4
 
-int control_state, wall_thresh;
+int control_state = 1; 
+int wall_thresh = 19000;
 
 //uint16_t val1, val2;
 
@@ -115,13 +116,13 @@ int set_zero_point(){
 
 
 void set_pwm_duty(int duty){
-  // Need to edit to take unsigned int for duty and no boolean.
+  // Need to edit to take signed int for duty and no boolean.
   if (duty>0){
     pin_write(&D[7], duty);
     pin_write(&D[8], 0x0);
   }
   else if (duty<0){
-    pin_write(&D[8], duty);
+    pin_write(&D[8], -1*duty);
     pin_write(&D[7], 0x0);
   }
   else {
@@ -205,13 +206,12 @@ int wall_control(int position){
     if (duty.w == 0x0){
       duty.w = pin_read(&D[8]);
     }
-    duty.b[1] = duty.b[1]*256;
-    duty.b[0] = duty.b[0]*256; 
-    pwm = duty.b[0]+duty.b[1]; //combines bytes into integer
+    pwm = duty.b[0]+duty.b[1]*256; //combines bytes into integer
     if (position >= threshold){
-	   ideal = -1 * torque; 
+	   ideal = 30; //set to "safe" max torque, 30/ 42.4 
     } 
-    pwm = pwm_control(ideal, torque, pwm);
+    //pwm = pwm_control(ideal, torque, pwm);
+    pwm = 0x8000; 
     return pwm;
 }
 
@@ -299,12 +299,16 @@ void VendorRequests(void) {
             break;
         case WALL: 
             control_state = 1;
+	    wall_control(19000); 
+	    set_pwm_duty(0x8000);
             BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+	    break;
         case SET_WALL_THRESHOLD: 
             set_wall_threshold((int)USB_setup.wValue.w);
             BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+	    break;
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
     }
@@ -350,7 +354,7 @@ int16_t main(void) {
 
     InitUSB();
 
-    int angle;                               // initialize the USB registers and serial interface engine
+    int angle,duty;                               // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
         ServiceUSB();                       // ...service USB requests
     }
@@ -364,13 +368,14 @@ int16_t main(void) {
             case 0: //No controller
               break;
             case 1: // Wall
-              wall_control(angle); 
+              duty = wall_control(angle); 
               break;
             default: // No controller
-	             wall_control(angle); 
+	       duty = wall_control(angle); 
               break;
           }
-
+	pin_write(&D[7], duty);
+    	pin_write(&D[8], 0x0);
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:
