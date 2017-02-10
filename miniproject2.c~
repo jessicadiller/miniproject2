@@ -374,7 +374,8 @@ int16_t main(void) {
 	       duty = wall_control(angle); 
               break;
           }
-	set_pwm_duty(duty);
+	pin_write(&D[7], duty);
+    	pin_write(&D[8], 0x0);
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:

@@ -210,8 +210,8 @@ int wall_control(int position){
     if (position >= threshold){
 	   ideal = 30; //set to "safe" max torque, 30/ 42.4 
     } 
-    //pwm = pwm_control(ideal, torque, pwm);
-    pwm = 0x8000; 
+    pwm = pwm_control(ideal, torque, pwm);
+    //pwm = 0x8000; 
     return pwm;
 }
 
