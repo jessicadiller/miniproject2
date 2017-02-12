@@ -234,13 +234,14 @@ int texture_control(int position, int speed, int bump_width){
   /*Need to figure out what we want for torque.  Right now, switching every 5 degrees
   May need to edit the direction vector
   */
-  effective_pos = position%(bump_width*2);
-  direction = speed/abs(speed);
+  int effective_pos = position%(bump_width*2);
+  float torque;
+  int direction = speed/abs(speed);
   if (effective_pos %  (bump_width*2) == 0){ // if going over the edge of a bump
     torque = 0.5 * direction;
   }
   else if (effective_pos %  (bump_width*2) == 5){
-    torque = -0.5 * direction
+    torque = -0.5 * direction;
   }
   else if (effective_pos < bump_width){
     torque = 0;
