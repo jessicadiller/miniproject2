@@ -11,10 +11,10 @@ class mp2:
         self.GET_ANGLE = 4
         self.GET_MAGNITUDE = 5
         self.GET_ENC = 6
-	self.GET_CURRENT = 7
-	self.SET_CONTROLLER = 8
-	self.WALL = 9
-	self.SET_WALL_THRESHOLD = 10
+    	self.GET_CURRENT = 7
+    	self.SET_CONTROLLER = 8
+    	self.WALL = 9
+    	self.SET_WALL_THRESHOLD = 10
         self.dev = usb.core.find(idVendor = 0x6666, idProduct = 0x0003)
         if self.dev is None:
             raise ValueError('no USB device found matching idVendor = 0x6666 and idProduct = 0x0003')
