@@ -32,6 +32,10 @@
 
 int control_state = 1; 
 int wall_thresh = 19000;
+int angle,duty;
+int speed;
+int torque;
+int time;
 
 //uint16_t val1, val2;
 
@@ -352,6 +356,9 @@ int16_t main(void) {
     init_pin();
     init_oc();
     init_spi();
+    init_timer();
+    struct _TIMER* timer1;
+    timer_start(timer1);
 
     ANG_MOSI = &D[0];
     ANG_MISO = &D[1];
@@ -370,15 +377,22 @@ int16_t main(void) {
 
     InitUSB();
 
-    int angle,duty;                               // initialize the USB registers and serial interface engine
+                                  // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
         ServiceUSB();                       // ...service USB requests
+        time = timer_time(timer1);
     }
     while (1) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
+        int old_angle = angle;
         angle = get_encoder_val_angle(); 
 	      angle = encoder_to_angle(angle); 
+        time = timer_time(timer1)-time;
+        speed = deriv_calcs(old_angle, angle, time);
+        /*torque calculation
+        get duty calculation.
+                */
         set_wall_threshold(2500);
           switch (control_state){
             case 0: //No controller
@@ -386,8 +400,10 @@ int16_t main(void) {
             case 1: // Wall
               duty = wall_control(angle); 
               break;
+            case 2: // Texture
+              duty = texture_control(angle,speed,5);
             default: // No controller
-	       duty = wall_control(angle); 
+	             duty = wall_control(angle); 
               break;
           }
 	pin_write(&D[7], duty);
