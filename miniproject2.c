@@ -85,6 +85,7 @@ int get_encoder_val_angle(void){
   Gets encoder value from the angle address
   */
   WORD angle = enc_read_reg((WORD)REG_ANG_ADDR);
+  angle.b[0]&SENSOR_MASK;
   return (int)angle.b[0]+(int)angle.b[1]*256; 
 }
 
@@ -201,7 +202,8 @@ int wall_control(int position){
     float torque = calc_torque(); 
     int ideal, pwm, threshold; 
     WORD duty;
-    threshold = get_wall_threshold();
+    //threshold = get_wall_threshold(); // in degrees
+    threshold = -1000; 
     duty.w = pin_read(&D[7]); 
     if (duty.w == 0x0){
       duty.w = pin_read(&D[8]);
@@ -209,9 +211,10 @@ int wall_control(int position){
     pwm = duty.b[0]+duty.b[1]*256; //combines bytes into integer
     if (position >= threshold){
 	   ideal = 30; //set to "safe" max torque, 30/ 42.4 
+     pin_write(&D[8], 0x0);
+     pin_write(&D[7], 0x0);
     } 
-    pwm = pwm_control(ideal, torque, pwm);
-    //pwm = 0x8000; 
+    // pwm = pwm_control(ideal, torque, pwm);
     return pwm;
 }
 
@@ -281,7 +284,7 @@ void VendorRequests(void) {
             break;
         case GET_ANGLE:
             angle = enc_read_reg((WORD)REG_ANG_ADDR);
-            angle.b[0]&SENSOR_MASK;
+            temp.w = angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
@@ -315,8 +318,12 @@ void VendorRequests(void) {
             break;
         case WALL: 
             control_state = 1;
-	    wall_control(19000); 
-	    set_pwm_duty(0x8000);
+            int a = get_encoder_val_angle(); 
+            a = encoder_to_angle(a);
+            wall_control(a);
+	          //temp.w = wall_control(a); // a needs to be in two byte form
+            
+	          //set_pwm_duty(0x8000);
             BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
 	    break;
@@ -378,8 +385,8 @@ int16_t main(void) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
         angle = get_encoder_val_angle(); 
-	      angle = encoder_to_angle(angle); 
-        set_wall_threshold(2500);
+	      angle = encoder_to_angle(angle);
+            /*set_wall_threshold(2500);
           switch (control_state){
             case 0: //No controller
               break;
@@ -387,11 +394,11 @@ int16_t main(void) {
               duty = wall_control(angle); 
               break;
             default: // No controller
-	       duty = wall_control(angle); 
+	            duty = wall_control(angle); 
               break;
           }
-	pin_write(&D[7], duty);
-    	pin_write(&D[8], 0x0);
+	  pin_write(&D[7], duty);
+    pin_write(&D[8], 0x0); */
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:

@@ -51,7 +51,7 @@ class mp2:
         except usb.core.USBError:
             print "Could not send GET_DUTY vendor request."
         else:
-            return int(ret[0]) + int(ret[1]) *256
+            return  int(ret[0]) + int(ret[1]) *256
 
     def get_angle(self):
         try:
@@ -59,7 +59,7 @@ class mp2:
         except usb.core.USBError:
             print "Could not send GET_ANGLE vendor request."
         else:
-            return int(ret[0]) + int(ret[1]) *256
+            return ((int(ret[0]) + int(ret[1]) *256) - 16167)/(-47)
 
     def get_magnitude(self):
         try:
@@ -78,10 +78,10 @@ class mp2:
             return ret
 
     def wall(self): 
-	#try:
-	self.dev.ctrl_transfer(0x40, self.WALL)
-	#except usb.core.USBError:
-        #    print "Could not send WALL vendor request."
+    	try:
+    	    ret = self.dev.ctrl_transfer(0x40, self.WALL)
+    	except usb.core.USBError:
+            print "Could not send WALL vendor request."
  
     def set_wall_threshold(self, angle): 
 	try:
