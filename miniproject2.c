@@ -32,6 +32,10 @@
 
 int control_state = 1; 
 int wall_thresh = 19000;
+int angle,duty;
+int speed;
+int torque;
+int time;
 
 //uint16_t val1, val2;
 
@@ -284,7 +288,6 @@ void VendorRequests(void) {
             break;
         case GET_ANGLE:
             angle = enc_read_reg((WORD)REG_ANG_ADDR);
-            temp.w = angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
@@ -292,7 +295,6 @@ void VendorRequests(void) {
             break;
         case GET_MAGNITUDE:
             angle = enc_read_reg((WORD)REG_MAG_ADDR);
-            angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
@@ -359,6 +361,9 @@ int16_t main(void) {
     init_pin();
     init_oc();
     init_spi();
+    init_timer();
+    struct _TIMER* timer1;
+    timer_start(timer1);
 
     ANG_MOSI = &D[0];
     ANG_MISO = &D[1];
@@ -377,28 +382,38 @@ int16_t main(void) {
 
     InitUSB();
 
-    int angle,duty;                               // initialize the USB registers and serial interface engine
+                                  // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
         ServiceUSB();                       // ...service USB requests
+        time = timer_time(timer1);
     }
     while (1) {
         ServiceUSB();                       // service any pending USB requests
         // variable:  control state
+        int old_angle = angle;
         angle = get_encoder_val_angle(); 
 	      angle = encoder_to_angle(angle);
             /*set_wall_threshold(2500);
+	      angle = encoder_to_angle(angle); 
+        time = timer_time(timer1)-time;
+        speed = deriv_calcs(old_angle, angle, time);
+        /*torque calculation
+        get duty calculation.
+                */
           switch (control_state){
             case 0: //No controller
               break;
             case 1: // Wall
               duty = wall_control(angle); 
               break;
+            case 2: // Texture
+              duty = texture_control(angle,speed,5);
             default: // No controller
 	            duty = wall_control(angle); 
               break;
           }
 	  pin_write(&D[7], duty);
-    pin_write(&D[8], 0x0); */
+    pin_write(&D[8], 0x0); 
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:
