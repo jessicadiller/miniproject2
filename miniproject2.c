@@ -285,7 +285,6 @@ void VendorRequests(void) {
             break;
         case GET_ANGLE:
             angle = enc_read_reg((WORD)REG_ANG_ADDR);
-            angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
@@ -293,7 +292,6 @@ void VendorRequests(void) {
             break;
         case GET_MAGNITUDE:
             angle = enc_read_reg((WORD)REG_MAG_ADDR);
-            angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
