@@ -63,7 +63,7 @@ WORD enc_read_reg(WORD address) {
     pin_clear(ANG_NCS);
     angle.b[1] = spi_transfer(&spi1, 0);
     angle.b[0] = spi_transfer(&spi1, 0);
-    angle.b[0]&SENSOR_MASK;
+    //angle.b[0]&SENSOR_MASK;
     pin_set(ANG_NCS);
     return angle;
 }
@@ -288,6 +288,7 @@ void VendorRequests(void) {
             break;
         case GET_ANGLE:
             angle = enc_read_reg((WORD)REG_ANG_ADDR);
+            angle.b[0]&SENSOR_MASK;
             BD[EP0IN].address[0] = angle.b[0];
             BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
@@ -412,13 +413,12 @@ int16_t main(void) {
 	            duty = wall_control(angle); 
               break;
           }
-	  pin_write(&D[7], duty);
-    pin_write(&D[8], 0x0); 
+	  // pin_write(&D[7], duty);
+    // pin_write(&D[8], 0x0); 
         // using if statement or similar: check control state, run relevant control calculator
         // Calculate the proper PWM from torque stuff
         // Set variables we need next loop:
           //Current position, current time, current PWM
-
     }
 }
 
