@@ -44,6 +44,19 @@ def torque_get():
     print real
     return real;
 
+def duty_frac_converter(num):
+    # Takes in a float, outputs the fractional part as an int between 0 and 2^16, where 2^16 = 1)
+    frac_num = num-int(num)
+    exponent=0
+    shifted_num=frac_num
+    while shifted_num != int(shifted_num) and exponent<16:
+        shifted_num*=2
+        exponent+=1
+    # print(shifted_num)
+    # print(int(shifted_num))
+    new_shifted_num = shifted_num*(2**(16-exponent))
+    return new_shifted_num
+
 def pwm_control(realT, idealT, change):
     #print "pwm control function"
     if change == False:
@@ -53,7 +66,7 @@ def pwm_control(realT, idealT, change):
     diffT = idealT - realT
     print "diff:"
     print diffT
-    new_duty = diffT/(3 * idealT)
+    new_duty = duty_frac_converter(diffT/(3 * idealT))
     print "new_duty:"
     print new_duty
     print "{0:b}".format(int(new_duty))
