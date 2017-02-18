@@ -17,7 +17,7 @@ list = Builder(action = 'xc16-objdump -S -D $SOURCE > $TARGET',
                src_suffix = 'elf')
 env.Append(BUILDERS = {'List' : list})
 
-env.Program('miniproject2', ['miniproject.c',
+env.Program('mp2py', ['mp2py.c',
                          'descriptors.c', 
                          'usb.c', 
                          '../lib/ui.c',
@@ -26,5 +26,5 @@ env.Program('miniproject2', ['miniproject.c',
                          '../lib/spi.c',
                          '../lib/common.c',
                          '../lib/timer.c'])
-env.Hex('miniproject2')
-env.List('miniproject2')
+env.Hex('mp2py')
+env.List('mp2py')
