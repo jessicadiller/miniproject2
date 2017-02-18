@@ -2,19 +2,18 @@
 import usb.core
 import time
 
-class mp2:
+class jtest:
 
     def __init__(self):
         self.TOGGLE_LED1 = 1
-        self.SET_DUTY = 2
-        self.GET_DUTY = 3
-        self.GET_ANGLE = 4
-        self.GET_MAGNITUDE = 5
-        self.GET_ENC = 6
-    	self.GET_CURRENT = 7
-    	self.SET_CONTROLLER = 8
-    	self.WALL = 9
-    	self.SET_WALL_THRESHOLD = 10
+        self.TOGGLE_LED2 = 2
+        self.TOGGLE_LED3 = 3
+        self.SET_DUTY_F = 4
+        self.SET_DUTY_R = 5
+        self.GET_DUTY_F = 6
+        self.GET_DUTY_R = 7
+        self.GET_ANGLE = 8
+        self.GET_CURRENT = 9
         self.dev = usb.core.find(idVendor = 0x6666, idProduct = 0x0003)
         if self.dev is None:
             raise ValueError('no USB device found matching idVendor = 0x6666 and idProduct = 0x0003')
@@ -39,19 +38,45 @@ class mp2:
         except usb.core.USBError:
             print "Could not send TOGGLE_LED1 vendor request."
 
-    def set_duty(self, duty):
+    def toggle_led2(self):
         try:
-            self.dev.ctrl_transfer(0x40, self.SET_DUTY, int(duty))
+            self.dev.ctrl_transfer(0x40, self.TOGGLE_LED2)
+        except usb.core.USBError:
+            print "Could not send TOGGLE_LED1 vendor request."
+
+    def toggle_led3(self):
+        try:
+            self.dev.ctrl_transfer(0x40, self.TOGGLE_LED3)
+        except usb.core.USBError:
+            print "Could not send TOGGLE_LED1 vendor request."
+
+    def set_duty_r(self, duty):
+        try:
+            self.dev.ctrl_transfer(0x40, self.SET_DUTY_R, int(duty))
         except usb.core.USBError:
             print "Could not send SET_DUTY vendor request."
 
-    def get_duty(self):
+    def set_duty_f(self, duty):
         try:
-            ret = self.dev.ctrl_transfer(0xC0, self.GET_DUTY, 0, 0, 2)
+            self.dev.ctrl_transfer(0x40, self.SET_DUTY_F, int(duty))
+        except usb.core.USBError:
+            print "Could not send SET_DUTY vendor request."
+
+    def get_duty_f(self):
+        try:
+            ret = self.dev.ctrl_transfer(0xC0, self.GET_DUTY_F, 0, 0, 2)
         except usb.core.USBError:
             print "Could not send GET_DUTY vendor request."
         else:
-            return  int(ret[0]) + int(ret[1]) *256
+            return int(ret[0]) + int(ret[1]) *256
+
+    def get_duty_r(self):
+        try:
+            ret = self.dev.ctrl_transfer(0xC0, self.GET_DUTY_R, 0, 0, 2)
+        except usb.core.USBError:
+            print "Could not send GET_DUTY vendor request."
+        else:
+            return int(ret[0]) + int(ret[1]) *256
 
     def get_angle(self):
         try:
@@ -59,33 +84,13 @@ class mp2:
         except usb.core.USBError:
             print "Could not send GET_ANGLE vendor request."
         else:
-            return ((int(ret[0]) + int(ret[1]) *256) - 16167)/(-47)
-
-    def get_magnitude(self):
-        try:
-            ret = self.dev.ctrl_transfer(0xC0, self.GET_MAGNITUDE, 0, 0, 2)
-        except usb.core.USBError:
-            print "Could not send GET_MAGNITUDE vendor request."
-        else:
             return ret
 
-    def get_enc(self, address):
+    def get_current(self):
         try:
-            ret = self.dev.ctrl_transfer(0xC0, self.GET_ANGLE, address, 0, 2)
+            ret = self.dev.ctrl_transfer(0xC0, self.GET_CURRENT, 0, 0, 2)
         except usb.core.USBError:
-            print "Could not send GET_ENC vendor request."
+            print "Could not send GET_CURRENT vendor request."
         else:
             return ret
-
-    def wall(self): 
-    	try:
-    	    ret = self.dev.ctrl_transfer(0x40, self.WALL)
-    	except usb.core.USBError:
-            print "Could not send WALL vendor request."
- 
-    def set_wall_threshold(self, angle): 
-	try:
-	    self.dev.ctrl_transfer(0x40, self.SET_WALL_THRESHOLD, angle)
-	except usb.core.USBError:
-            print "Could not send SET_DUTY vendor request."
 

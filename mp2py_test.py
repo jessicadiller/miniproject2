@@ -1,7 +1,7 @@
 import time
-import jessicaupdated as j
+import miniproject2 as mp
 
-at = j.jtest()
+at = mp.jtest()
 
 def angle_get():
     measured_angle = at.get_angle()
@@ -78,17 +78,22 @@ def wall_control(position):
 	ideal = 1; #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold r"
+        at.set_duty_f(0xF000)
     elif (position >= threshold_f):
 	ideal = -1; #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold f"
+        at.set_duty_r(0xF000)
     else: 
         ideal = 0
         control = False
         print "not past threshold"
+        at.set_duty_f(0)
     #print "control:"
     #print control
-    pwm_control(torque, ideal, control);
+
+    #pwm_control(torque, ideal, control);
+
     #int ideal, pwm, threshold; 
     # threshold = get_wall_threshold(); // in degrees
     #duty.w = pin_read(&D[7]); 
@@ -108,8 +113,9 @@ def wall_control(position):
 #call functions
 #t = 1
 #while t < 1000000000000000000000000:
-position = angle_get()
-wall_control(position)
+while True:
+    position = angle_get()
+    wall_control(position)
     #t = t+1
 
 
