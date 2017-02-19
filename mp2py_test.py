@@ -45,8 +45,12 @@ def torque_get():
     return real;
 
 def duty_frac_converter(num):
-    # Takes in a float, outputs the fractional part as an int between 0 and 2^16, where 2^16 = 1)
-    frac_num = num-int(num)
+    # Takes in a positive float, outputs the fractional part as an int between 0
+    # and 2^16, where 2^16 = 1)
+    if num>1:
+        frac_num = 0.99999
+    else:
+        frac_num = num
     exponent=0
     shifted_num=frac_num
     while shifted_num != int(shifted_num) and exponent<16:
@@ -59,23 +63,46 @@ def duty_frac_converter(num):
 
 def pwm_control(realT, idealT, change):
     #print "pwm control function"
-    if change == False:
-        print "no change in pwm"
-        return;
+    # if change == False:
+    #     print "no change in pwm"
+    #     return;
+    ### Commented out if change == False because having that means that PWM will
+    #### always be on?  Let's talk about this.
     at.toggle_led2()
     diffT = idealT - realT
+    dutyf = int(at.get_duty_f())
+    print('dutyf:')
+    print(dutyf)
+    dutyr = int(at.get_duty_r())
+    print('dutyr:')
+    print(dutyr)
+    if dutyf >0:
+        duty = dutyf
+    elif dutyr < 0:
+        duty = -dutyr
+    else:
+        if idealT >0:
+            duty = 1 # set to 1 so we can do calculations
+        elif idealT <0:
+            duty = -1 # Set duty to 1 so we can do calculations
+        else:
+            duty = 0  # consider duty 0 only if torque wants to be 0.
     print "diff:"
     print diffT
-    new_duty = duty_frac_converter(diffT/(3 * idealT))
+    if idealT*realT == 0:
+        new_duty = 0
+    else:
+        fraction = diffT/(3 * realT)
+        new_duty = duty*(1+fraction)
     print "new_duty:"
     print new_duty
     print "{0:b}".format(int(new_duty))
     #NEED TO FIGURE OUT HOW TO GO FROM THIS FRACTIONAL DECIMAL FLOAT TO BINARY FIXED POINT
-    if new_duty > 0:
-        at.set_duty_f(new_duty)
+    if new_duty < 0:
+        at.set_duty_f(duty_frac_converter(new_duty))
         print "set duty forward"
-    elif new_duty <0:
-        at.set_duty_r(new_duty * -1)
+    elif new_duty >0:
+        at.set_duty_r(duty_frac_converter(new_duty * -1))
         print "set duty reverse"
     else: 
         at.set_duty_f(0)
@@ -91,21 +118,21 @@ def wall_control(position):
 	ideal = 1; #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold r"
-        at.set_duty_f(0xF000)
+        # at.set_duty_f(0xF000)
     elif (position >= threshold_f):
 	ideal = -1; #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold f"
-        at.set_duty_r(0xF000)
+        # at.set_duty_r(0xF000)
     else: 
         ideal = 0
         control = False
         print "not past threshold"
-        at.set_duty_f(0)
+        # at.set_duty_f(0)
     #print "control:"
     #print control
 
-    #pwm_control(torque, ideal, control);
+    pwm_control(torque, ideal, control);
 
     #int ideal, pwm, threshold; 
     # threshold = get_wall_threshold(); // in degrees
