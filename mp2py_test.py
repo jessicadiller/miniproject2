@@ -74,7 +74,11 @@ def pwm_control(realT, idealT, change):
     duty = dutyf - dutyr
     print "total duty: ",duty
 
-    new_duty = duty * fraction
+    new_duty = duty + abs(duty) * fraction
+    if new_duty > 2**16-1:
+        new_duty = 2**16-1
+    elif new_duty<-(2**16-1):
+        new_dut = -(2**16-1)
     #NEGATIVE VALUE FOR PWM JUST GET BIGGER AND BIGGER
     print "new_duty: ",new_duty
     print "{0:b}".format(int(new_duty))
