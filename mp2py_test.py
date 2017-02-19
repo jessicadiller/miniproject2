@@ -41,19 +41,28 @@ def pwm_control(realT, idealT, change):
         print "no change in pwm"
         return;
     at.toggle_led2()
+
     diffT = idealT - realT
-    print "diff:"
-    print diffT
-    new_duty = diffT/(3 * idealT)
-    print "new_duty:"
-    print new_duty
+    print "diff:",diffT
+    fraction = diffT/30
+    print "fraction: ",fraction
+
+    dutyf = at.get_duty_f()
+    print "dutyf: ",dutyf
+    dutyr = at.get_duty_r()
+    print "dutyr: ",dutyr
+    duty = dutyf - dutyr
+    print "total duty: ",duty
+
+    new_duty = duty * fraction
+    #NEGATIVE VALUE FOR PWM JUST GET BIGGER AND BIGGER
+    print "new_duty: ",new_duty
     print "{0:b}".format(int(new_duty))
-    #NEED TO FIGURE OUT HOW TO GO FROM THIS FRACTIONAL DECIMAL FLOAT TO BINARY FIXED POINT
     if new_duty > 0:
         at.set_duty_f(new_duty)
         print "set duty forward"
     elif new_duty <0:
-        at.set_duty_r(new_duty * -1)
+        at.set_duty_r(new_duty *-1)
         print "set duty reverse"
     else: 
         at.set_duty_f(0)
@@ -99,10 +108,10 @@ def wall_control(position):
 #spring_control
 def spring_control(position):
     torque = torque_get()
-    #print "torque: ",torque
-    ideal = position * -3 #FIGURE OUT ANGLE SYSTEM
-    #print "ideal: ",ideal
-    #pwm_control(torque, ideal, control, 1)
+    print "torque: ",torque
+    ideal = (position +145) * -1.5 #FIGURE OUT ANGLE SYSTEM
+    print "ideal: ",ideal
+    pwm_control(torque, ideal, 1)
     print "done"
     return;
 
