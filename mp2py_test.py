@@ -17,7 +17,16 @@ def angle_get():
     print position
     return position;
 
-#speed_get function
+def speed_get(): 
+    a1 = angle_get()
+    t1 = time.clock()
+    a2 = angle_get()
+    t2 = time.clock()
+    print a2 - a1
+    speed = (a2 - a1)/(t2 - t1)
+    angle = a2
+    return [speed, angle]
+
 
 def torque_get():
     at.toggle_led1()
@@ -75,12 +84,12 @@ def wall_control(position):
     threshold_r = -160 
     threshold_f = -130
     if (position <= threshold_r):
-	ideal = 1; #set to "safe" max torque, 30/ 42.4 
+	    ideal = 1; #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold r"
         at.set_duty_f(0xF000)
     elif (position >= threshold_f):
-	ideal = -1; #set to "safe" max torque, 30/ 42.4 
+	    ideal = -1; #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold f"
         at.set_duty_r(0xF000)
@@ -115,6 +124,11 @@ def wall_control(position):
 #while t < 1000000000000000000000000:
 while True:
     position = angle_get()
+# [speed, position] = speed_get() 
+# print "speed "
+# print speed
+# print "; position "
+# print position
     wall_control(position)
     #t = t+1
 

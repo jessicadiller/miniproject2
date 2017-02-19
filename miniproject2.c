@@ -58,7 +58,7 @@ WORD enc_read_reg(WORD address) {
 void VendorRequests(void) {
     WORD32 address;
     WORD temp;
-    WORD angle;
+    WORD angle, angle0, angle1, angle2;
     WORD vout;
     
     switch (USB_setup.bRequest) {
@@ -106,10 +106,15 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case GET_ANGLE:
-            angle = enc_read_reg((WORD)REG_ANG_ADDR);
-            angle.b[1] = angle.b[1]&0b00111111;
-            BD[EP0IN].address[0] = angle.b[0];
-            BD[EP0IN].address[1] = angle.b[1];
+            angle0 = enc_read_reg((WORD)REG_ANG_ADDR);
+            angle0.b[1] = angle0.b[1]&0b00111111;
+            angle1 = enc_read_reg((WORD)REG_ANG_ADDR);
+            angle1.b[1] = angle1.b[1]&0b00111111;
+            angle2 = enc_read_reg((WORD)REG_ANG_ADDR);
+            angle2.b[1] = angle2.b[1]&0b00111111;)
+            angle = (((uint16_t)angle0 + (uint16_t)angle1)>>2);
+            BD[EP0IN].address[0] = (uint8_t)angle & 0xff;
+            BD[EP0IN].address[1] = (uint8_t)(angle >> 8);
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
