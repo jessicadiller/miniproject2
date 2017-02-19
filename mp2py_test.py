@@ -5,16 +5,13 @@ at = mp.jtest()
 
 def angle_get():
     measured_angle = at.get_angle()
-    #print "measured angle:"
-    #print measured_angle
+    #print "measured angle: ",measured_angle
     #print "{0:b}".format(measured_angle[0])
     #print "{0:b}".format(measured_angle[1])
     int_angle = int(measured_angle[0]) + int(measured_angle[1])*256
-    #print "measured angle integer:"
-    #print int_angle
+    #print "measured angle integer: ",int_angle
     position = (int_angle - 16167) / 46.59
-    print "position:"
-    print position
+    print "position: ",position
     return position;
 
 #speed_get function
@@ -23,25 +20,19 @@ def torque_get():
     at.toggle_led1()
     #GET CURRENT
     analog = at.get_current()
-    #print "get_current output:"
-    #print analog
+    #print "get_current output: ",analog
     
     #TORQUE CALC
     measuredvout = int(analog[0])+int(analog[1])*256 #formats to integer
-    #print "measured integer:"
-    #print measuredvout
+    #print "measured integer: ",measuredvout
     fraction = (float(measuredvout) / 65535)
-    #print "vout fraction:"
-    #print fraction
+    #print "vout fraction: ",fraction
     normalized = fraction * 3.3
-    #print "vout actual:"
-    #print normalized
+    #print "vout actual: ",normalized
     current = (normalized - 1.6) / 0.75
-    #print "current calculation:"
-    #print current
+    #print "current calculation: ",print current
     real = 4 * current
-    print "real torque:"
-    print real
+    print "real torque:, ",real
     return real;
 
 def duty_frac_converter(num):
@@ -69,40 +60,30 @@ def pwm_control(realT, idealT, change):
     ### Commented out if change == False because having that means that PWM will
     #### always be on?  Let's talk about this.
     at.toggle_led2()
+
     diffT = idealT - realT
-    dutyf = int(at.get_duty_f())
-    print('dutyf:')
-    print(dutyf)
-    dutyr = int(at.get_duty_r())
-    print('dutyr:')
-    print(dutyr)
-    if dutyf >0:
-        duty = dutyf
-    elif dutyr < 0:
-        duty = -dutyr
-    else:
-        if idealT >0:
-            duty = 1 # set to 1 so we can do calculations
-        elif idealT <0:
-            duty = -1 # Set duty to 1 so we can do calculations
-        else:
-            duty = 0  # consider duty 0 only if torque wants to be 0.
-    print "diff:"
-    print diffT
-    if idealT*realT == 0:
-        new_duty = 0
-    else:
-        fraction = diffT/(3 * realT)
-        new_duty = duty*(1+fraction)
-    print "new_duty:"
-    print new_duty
+
+    print "diff:",diffT
+    fraction = diffT/30
+    print "fraction: ",fraction
+
+    dutyf = at.get_duty_f()
+    print "dutyf: ",dutyf
+    dutyr = at.get_duty_r()
+    print "dutyr: ",dutyr
+    duty = dutyf - dutyr
+    print "total duty: ",duty
+
+    new_duty = duty * fraction
+    #NEGATIVE VALUE FOR PWM JUST GET BIGGER AND BIGGER
+    print "new_duty: ",new_duty
     print "{0:b}".format(int(new_duty))
-    #NEED TO FIGURE OUT HOW TO GO FROM THIS FRACTIONAL DECIMAL FLOAT TO BINARY FIXED POINT
-    if new_duty < 0:
-        at.set_duty_f(duty_frac_converter(new_duty))
+    if new_duty > 0:
+        at.set_duty_f(new_duty)
         print "set duty forward"
-    elif new_duty >0:
-        at.set_duty_r(duty_frac_converter(new_duty * -1))
+    elif new_duty <0:
+        at.set_duty_r(new_duty *-1)
+
         print "set duty reverse"
     else: 
         at.set_duty_f(0)
@@ -132,6 +113,7 @@ def wall_control(position):
     #print "control:"
     #print control
 
+
     pwm_control(torque, ideal, control);
 
     #int ideal, pwm, threshold; 
@@ -147,15 +129,26 @@ def wall_control(position):
     return;
 
 #spring_control
+def spring_control(position):
+    torque = torque_get()
+    print "torque: ",torque
+    ideal = (position +145) * -1.5 #FIGURE OUT ANGLE SYSTEM
+    print "ideal: ",ideal
+    pwm_control(torque, ideal, 1)
+    print "done"
+    return;
+
+
 #damper_control
 #texture_control
 
 #call functions
 #t = 1
 #while t < 1000000000000000000000000:
-while True:
-    position = angle_get()
-    wall_control(position)
+#while True:
+position = angle_get()
+spring_control(position)
+#    wall_control(position)
     #t = t+1
 
 
