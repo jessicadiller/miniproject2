@@ -133,7 +133,6 @@ def wall_control(position):
     #print "control:"
     #print control
 
-
     # pwm_control(torque, ideal, control);
 
     return;
