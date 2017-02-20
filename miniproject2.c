@@ -50,10 +50,11 @@ WORD enc_read_reg(WORD address) {
     pin_set(ANG_NCS);
 
     pin_clear(ANG_NCS);
-    angle.b[1] = spi_transfer(&spi1, 0);
+    angle,b[1] = spi_transfer(&spi1, 0);
     angle.b[0] = spi_transfer(&spi1, 0);
     pin_set(ANG_NCS);
-    return angle;
+    angle.b[1] = angle.b[1]&0b00111111;
+    return;
 }
 
 void VendorRequests(void) {
@@ -192,8 +193,7 @@ int16_t main(void) {
         if (timer_flag(&timer2)) { //periodically:
             timer_lower(&timer2);
             led_toggle(&led1); //switch LED1 from on to off and vice versa
-            angle = enc_read_reg((WORD)REG_ANG_ADDR);
-            angle.b[1] = angle.b[1]&0b00111111;
+            enc_read_reg((WORD)REG_ANG_ADDR);
         }
     }
 }
