@@ -25,6 +25,7 @@
 #define SENSOR_MASK       0X3F
 #define ANALOG_MASK       0XC0
 
+WORD angle;
 //uint16_t val1, val2;
 
 //void ClassRequests(void) {
@@ -39,7 +40,7 @@ _PIN *ANG_NCS;
 _PIN *CURR_P;
 
 WORD enc_read_reg(WORD address) {
-    WORD cmd, angle;
+    WORD cmd;
     cmd.w = 0x4000|address.w; //set 2nd MSB to 1 for a read
     cmd.w |= parity(cmd.w)<<15; //calculate even parity for
 
@@ -49,18 +50,17 @@ WORD enc_read_reg(WORD address) {
     pin_set(ANG_NCS);
 
     pin_clear(ANG_NCS);
-    angle.b[1] = spi_transfer(&spi1, 0);
+    angle,b[1] = spi_transfer(&spi1, 0);
     angle.b[0] = spi_transfer(&spi1, 0);
     pin_set(ANG_NCS);
-    return angle;
+    angle.b[1] = angle.b[1]&0b00111111;
+    return;
 }
 
 void VendorRequests(void) {
     WORD32 address;
     WORD temp;
-    WORD angle0, angle1, angle2, angle3;
     WORD vout;
-    uint16_t angle, angleAv1, angleAv2; 
     
     switch (USB_setup.bRequest) {
         case TOGGLE_LED1:
@@ -107,8 +107,8 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case GET_ANGLE:
-            angle0 = enc_read_reg((WORD)REG_ANG_ADDR);
-            angle0.b[1] = angle0.b[1]&0b00111111;
+            //angle0 = enc_read_reg((WORD)REG_ANG_ADDR);
+            //angle0.b[1] = angle0.b[1]&0b00111111;
             // angle1 = enc_read_reg((WORD)REG_ANG_ADDR);
             // angle1.b[1] = angle1.b[1]&0b00111111;
             // angle2 = enc_read_reg((WORD)REG_ANG_ADDR);
@@ -121,8 +121,8 @@ void VendorRequests(void) {
             // // angle = (angleAv1 + angleAv2)>>1;
             // BD[EP0IN].address[0] = (uint8_t) (angle >> 8); // from http://stackoverflow.com/questions/1289251/converting-a-uint16-value-into-a-uint8-array2 
             // BD[EP0IN].address[1] = (uint8_t) (angle);
-            BD[EP0IN].address[0] = angle0.b[0]; 
-            BD[EP0IN].address[1] = angle0.b[1];
+            BD[EP0IN].address[0] = angle.b[0]; 
+            BD[EP0IN].address[1] = angle.b[1];
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
@@ -159,7 +159,11 @@ int16_t main(void) {
     init_pin();
     init_oc();
     init_spi();
+    init_timer();
 
+    angle.b[0] = 00000000;
+    angle.b[1] = 00000000;
+  
     ANG_MOSI = &D[0];
     ANG_MISO = &D[1];
     ANG_SCK = &D[2];
@@ -175,12 +179,22 @@ int16_t main(void) {
     oc_pwm(&oc1, &D[7], NULL, 20e3, 0x8000);
     oc_pwm(&oc2, &D[8], NULL, 20e3, 0x0);
 
+    led_on(&led1);
+    led_on(&led2);
+    timer_setPeriod(&timer2, 1);
+    timer_start(&timer2);
+
     InitUSB();                              // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
         ServiceUSB();                       // ...service USB requests
     }
     while (1) {
         ServiceUSB();                       // service any pending USB requests
+        if (timer_flag(&timer2)) { //periodically:
+            timer_lower(&timer2);
+            led_toggle(&led1); //switch LED1 from on to off and vice versa
+            enc_read_reg((WORD)REG_ANG_ADDR);
+        }
     }
 }
 
