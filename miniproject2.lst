@@ -6135,7 +6135,7 @@ void oc_servo(_OC *self, _PIN *pin, _TIMER *timer, float interval,
     3206:	00 00 06    	return    
 
 00003208 <_VendorRequests>:
-    3208:	0a 00 fa    	lnk       #0xa
+    3208:	10 00 fa    	lnk       #0x10
     320a:	40 83 20    	mov.w     #0x834, w0
     320c:	10 40 90    	mov.b     [w0+1], w0
     320e:	00 80 fb    	ze        w0, w0
@@ -6302,13 +6302,13 @@ void oc_servo(_OC *self, _PIN *pin, _TIMER *timer, float interval,
 00003326 <.L12>:
     3326:	50 42 80    	mov.w     0x84a, w0
     3328:	d6 fc 07    	rcall     0x2cd6 <_pin_read> <L0> <.LFB12> <.LFE11>
-    332a:	40 07 98    	mov.w     w0, [w14+8]
+    332a:	70 07 98    	mov.w     w0, [w14+14]
     332c:	30 60 80    	mov.w     0xc06, w0
-    332e:	8e 48 90    	mov.b     [w14+8], w1
+    332e:	ee 48 90    	mov.b     [w14+14], w1
     3330:	01 48 78    	mov.b     w1, [w0]
     3332:	30 60 80    	mov.w     0xc06, w0
     3334:	00 00 e8    	inc.w     w0, w0
-    3336:	9e 48 90    	mov.b     [w14+9], w1
+    3336:	fe 48 90    	mov.b     [w14+15], w1
     3338:	01 48 78    	mov.b     w1, [w0]
     333a:	40 c0 20    	mov.w     #0xc04, w0
     333c:	21 c0 b3    	mov.b     #0x2, w1

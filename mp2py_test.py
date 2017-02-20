@@ -4,17 +4,31 @@ import miniproject2 as mp
 at = mp.jtest()
 
 def angle_get():
-    measured_angle = at.get_angle()
-    #print "measured angle: ",measured_angle
-    #print "{0:b}".format(measured_angle[0])
-    #print "{0:b}".format(measured_angle[1])
-    int_angle = int(measured_angle[0]) + int(measured_angle[1])*256
-    #print "measured angle integer: ",int_angle
-    position = (int_angle - 16167) / 46.59
+    sum_angle = 0; 
+    for i in range(0,20):
+        measured_angle = at.get_angle()
+        # print "measured angle: ",measured_angle
+        # print "{0:b}".format(measured_angle[0])
+        # print "{0:b}".format(measured_angle[1])
+        int_angle = int(measured_angle[0]) + int(measured_angle[1])*256
+        # print "measured angle integer: ",int_angle
+        sum_angle += int_angle
+    avg_angle = sum_angle/20
+    # print "avg: ", avg_angle
+    position = (avg_angle - 16167) / 46.59
     print "position: ",position
     return position;
 
-#speed_get function
+def speed_get(): 
+    a1 = angle_get()
+    t1 = time.clock()
+    a2 = angle_get()
+    t2 = time.clock()
+    print a2 - a1
+    speed = (a2 - a1)/(t2 - t1)
+    angle = a2
+    return [speed, angle]
+
 
 def torque_get():
     at.toggle_led1()
@@ -100,12 +114,12 @@ def wall_control(position):
     threshold_r = -160 
     threshold_f = -130
     if (position <= threshold_r):
-	ideal = 1; #set to "safe" max torque, 30/ 42.4 
+	ideal = 1 #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold r"
         # at.set_duty_f(0xF000)
     elif (position >= threshold_f):
-	ideal = -1; #set to "safe" max torque, 30/ 42.4 
+	ideal = -1 #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold f"
         # at.set_duty_r(0xF000)
@@ -148,11 +162,26 @@ def spring_control(position):
 
 #call functions
 #t = 1
+<<<<<<< HEAD
 # while t < 1000000000000000000000000:
 # while True:
 position = angle_get()
 spring_control(position)
 #    wall_control(position)
+=======
+#while t < 1000000000000000000000000:
+
+while True:
+    position = angle_get()
+# [speed, position] = speed_get() 
+# print "speed "
+# print speed
+# print "; position "
+# print position
+    wall_control(position)
+    #spring_control(position)
+
+>>>>>>> c7b9f91e0e4f214489c2ed8eb1349662946baf61
     #t = t+1
 
 
