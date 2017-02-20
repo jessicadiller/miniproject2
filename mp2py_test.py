@@ -136,7 +136,7 @@ def wall_control(position):
 def spring_control(position):
     torque = torque_get()
     print "torque: ",torque
-    ideal = (position +145) * -1.5 #FIGURE OUT ANGLE SYSTEM
+    ideal = (position +145) * -0.5 #FIGURE OUT ANGLE SYSTEM
     print "ideal: ",ideal
     pwm_control(torque, ideal, 1)
     print "done"
@@ -148,8 +148,8 @@ def spring_control(position):
 
 #call functions
 #t = 1
-#while t < 1000000000000000000000000:
-#while True:
+# while t < 1000000000000000000000000:
+# while True:
 position = angle_get()
 spring_control(position)
 #    wall_control(position)
