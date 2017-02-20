@@ -13,7 +13,8 @@ class jtest:
         self.GET_DUTY_F = 6
         self.GET_DUTY_R = 7
         self.GET_ANGLE = 8
-        self.GET_CURRENT = 9
+        self.GET_ANGLE_SPEED = 9
+        self.GET_CURRENT = 10
         self.dev = usb.core.find(idVendor = 0x6666, idProduct = 0x0003)
         if self.dev is None:
             raise ValueError('no USB device found matching idVendor = 0x6666 and idProduct = 0x0003')
@@ -83,6 +84,14 @@ class jtest:
             ret = self.dev.ctrl_transfer(0xC0, self.GET_ANGLE, 0, 0, 2)
         except usb.core.USBError:
             print "Could not send GET_ANGLE vendor request."
+        else:
+            return ret
+
+    def get_angle_speed(self):
+        try:
+            ret = self.dev.ctrl_transfer(0xC0, self.GET_ANGLE, 0, 0, 4)
+        except usb.core.USBError:
+            print "Could not send GET_ANGLE_SPEED vendor request."
         else:
             return ret
 
