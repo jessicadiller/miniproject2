@@ -17,7 +17,8 @@
 #define GET_DUTY_F        6
 #define GET_DUTY_R        7
 #define GET_ANGLE         8
-#define GET_CURRENT       9
+#define GET_ANGLE_SPEED   9
+#define GET_CURRENT       10
 
 #define REG_ANG_ADDR      0x3FFF
 #define REG_MAG_ADDR      0x3FFE
@@ -25,7 +26,7 @@
 #define SENSOR_MASK       0X3F
 #define ANALOG_MASK       0XC0
 
-WORD angle;
+WORD angle, old_angle;
 //uint16_t val1, val2;
 
 //void ClassRequests(void) {
@@ -39,9 +40,9 @@ _PIN *ANG_SCK, *ANG_MISO, *ANG_MOSI;
 _PIN *ANG_NCS;
 _PIN *CURR_P;
 
-WORD enc_read_reg(WORD address) {
+WORD enc_read_reg(WORD registeraddress) {
     WORD cmd;
-    cmd.w = 0x4000|address.w; //set 2nd MSB to 1 for a read
+    cmd.w = 0x4000|registeraddress.w; //set 2nd MSB to 1 for a read
     cmd.w |= parity(cmd.w)<<15; //calculate even parity for
 
     pin_clear(ANG_NCS);
@@ -50,10 +51,10 @@ WORD enc_read_reg(WORD address) {
     pin_set(ANG_NCS);
 
     pin_clear(ANG_NCS);
-    angle,b[1] = spi_transfer(&spi1, 0);
+    angle.b[1] = spi_transfer(&spi1, 0);
     angle.b[0] = spi_transfer(&spi1, 0);
     pin_set(ANG_NCS);
-    angle.b[1] = angle.b[1]&0b00111111;
+    angle.b[1] = angle.b[1]&0b00111111; //MASK
     return;
 }
 
@@ -107,7 +108,7 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case GET_ANGLE:
-            //angle0 = enc_read_reg((WORD)REG_ANG_ADDR);
+            enc_read_reg((WORD)REG_ANG_ADDR);
             //angle0.b[1] = angle0.b[1]&0b00111111;
             // angle1 = enc_read_reg((WORD)REG_ANG_ADDR);
             // angle1.b[1] = angle1.b[1]&0b00111111;
@@ -126,6 +127,13 @@ void VendorRequests(void) {
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
+        case GET_ANGLE_SPEED:
+            BD[EP0IN].address[0] = old_angle.b[0]; 
+            BD[EP0IN].address[1] = old_angle.b[1];
+            BD[EP0IN].address[2] = angle.b[0]; 
+            BD[EP0IN].address[3] = angle.b[1];
+            BD[EP0IN].bytecount = 4;    // set EP0 IN byte count to 2
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         case GET_CURRENT:
             vout.w = pin_read(CURR_P);
             BD[EP0IN].address[0] = vout.b[0];
@@ -160,9 +168,12 @@ int16_t main(void) {
     init_oc();
     init_spi();
     init_timer();
+    //WORD first;
+    //WORD second;
+    //WORD diff;
 
-    angle.b[0] = 00000000;
-    angle.b[1] = 00000000;
+    //angle.b[0] = 00000000;
+    //angle.b[1] = 00000000;
   
     ANG_MOSI = &D[0];
     ANG_MISO = &D[1];
@@ -184,6 +195,11 @@ int16_t main(void) {
     timer_setPeriod(&timer2, 1);
     timer_start(&timer2);
 
+    old_angle.b[0] = 0b11111111;
+    old_angle.b[1] = 0b11111111;
+    angle.b[0] = 0b01010101;
+    angle.b[1] = 0b10101010;
+
     InitUSB();                              // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
         ServiceUSB();                       // ...service USB requests
@@ -193,7 +209,11 @@ int16_t main(void) {
         if (timer_flag(&timer2)) { //periodically:
             timer_lower(&timer2);
             led_toggle(&led1); //switch LED1 from on to off and vice versa
+            old_angle = angle;
             enc_read_reg((WORD)REG_ANG_ADDR);
+            //enc_read_reg((WORD)REG_ANG_ADDR);
+            //enc_read_reg((WORD)REG_ANG_ADDR);
+
         }
     }
 }

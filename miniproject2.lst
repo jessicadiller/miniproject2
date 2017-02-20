@@ -1567,34 +1567,19 @@ Disassembly of section .const:
 Disassembly of section .text:
 
 000015fc <_InitUSB>:
-BYTE USB_device_status;
-BYTE USB_USTAT;
-BYTE USB_USWSTAT;
-
-void InitUSB(void) {
     15fc:	04 00 fa    	lnk       #0x4
-    unsigned int *U1EP;
-    BYTE n;
-
-    U1CONbits.PPBRST = 1;
     15fe:	94 24 a8    	bset.b    0x494, #0x1
-    U1ADDR = 0;
     1600:	96 24 ef    	clr.w     0x496
-    U1EIR = 0xFF;
     1602:	f0 0f 20    	mov.w     #0xff, w0
     1604:	70 24 88    	mov.w     w0, 0x48e
-    U1CONbits.PPBRST = 0;
     1606:	94 24 a9    	bclr.b    0x494, #0x1
-    U1EP = (unsigned int *)&U1EP0;
     1608:	a0 4a 20    	mov.w     #0x4aa, w0
     160a:	10 07 98    	mov.w     w0, [w14+2]
-    for (n = 0; n<16; n++)
     160c:	00 40 eb    	clr.b     w0
     160e:	00 4f 78    	mov.b     w0, [w14]
     1610:	07 00 37    	bra       0x1620 <.L2>
 
 00001612 <.L3>:
-        U1EP[n] = ENDPT_DISABLED;
     1612:	1e 80 fb    	ze        [w14], w0
     1614:	00 00 40    	add.w     w0, w0, w0
     1616:	9e 00 90    	mov.w     [w14+2], w1
@@ -1607,63 +1592,40 @@ void InitUSB(void) {
     1620:	1e 40 78    	mov.b     [w14], w0
     1622:	ef 4f 50    	sub.b     w0, #0xf, [w15]
     1624:	f6 ff 36    	bra       LEU, 0x1612 <.L3>
-    U1EP0 = ENDPT_CONTROL;
     1626:	d0 00 20    	mov.w     #0xd, w0
     1628:	50 25 88    	mov.w     w0, 0x4aa
-    BD[EP0OUT].bytecount = MAX_PACKET_SIZE;
     162a:	00 c0 20    	mov.w     #0xc00, w0
     162c:	01 c4 b3    	mov.b     #0x40, w1
     162e:	01 48 78    	mov.b     w1, [w0]
-    BD[EP0OUT].address = EP0_OUT_buffer;    // EP0 OUT gets a buffer
     1630:	60 aa 20    	mov.w     #0xaa6, w0
     1632:	10 60 88    	mov.w     w0, 0xc02
-    BD[EP0OUT].status = 0x88;               // set UOWN bit (USB can write)
     1634:	10 c0 20    	mov.w     #0xc01, w0
     1636:	81 c8 b3    	mov.b     #0x88, w1
     1638:	01 48 78    	mov.b     w1, [w0]
-    BD[EP0IN].address = EP0_IN_buffer;      // EP0 IN gets a buffer
     163a:	60 ae 20    	mov.w     #0xae6, w0
     163c:	30 60 88    	mov.w     w0, 0xc06
-    BD[EP0IN].status = 0x08;                // clear UOWN bit (MCU can write)
     163e:	50 c0 20    	mov.w     #0xc05, w0
     1640:	81 c0 b3    	mov.b     #0x8, w1
     1642:	01 48 78    	mov.b     w1, [w0]
-    U1CNFG1 = 0x00;
     1644:	a6 24 ef    	clr.w     0x4a6
-    U1CNFG2 = 0x00;
     1646:	a8 24 ef    	clr.w     0x4a8
-    U1BDTP1 = (unsigned int)BD>>8;
     1648:	00 c0 20    	mov.w     #0xc00, w0
     164a:	48 00 de    	lsr.w     w0, #0x8, w0
     164c:	c0 24 88    	mov.w     w0, 0x498
-    U1OTGCONbits.OTGEN = 1;
     164e:	86 44 a8    	bset.b    0x486, #0x2
-    U1OTGCONbits.DPPULUP = 1;
     1650:	86 e4 a8    	bset.b    0x486, #0x7
-    U1PWRCbits.USBPWR = 1;
     1652:	88 04 a8    	bset.b    0x488, #0x0
-    U1CONbits.PKTDIS = 0;
     1654:	94 a4 a9    	bclr.b    0x494, #0x5
-    USB_curr_config = 0x00;
     1656:	3d 68 ef    	clr.b     0x83d
-    USB_USWSTAT = 0x00;         // default to powered state
     1658:	40 68 ef    	clr.b     0x840
-    USB_device_status = 0x01;
     165a:	10 c0 b3    	mov.b     #0x1, w0
     165c:	3e e8 b7    	mov.b     WREG, 0x83e
-    USB_request.setup.bmRequestType = NO_REQUEST;    // No device requests in process
     165e:	60 b2 20    	mov.w     #0xb26, w0
     1660:	80 c0 eb    	setm.b    w1
     1662:	01 48 78    	mov.b     w1, [w0]
-    USB_request.setup.bRequest = NO_REQUEST;
     1664:	70 b2 20    	mov.w     #0xb27, w0
     1666:	80 c0 eb    	setm.b    w1
     1668:	01 48 78    	mov.b     w1, [w0]
-#ifdef SHOW_ENUM_STATUS
-    TRISB = 0x00;               // set all bits of PORTB as outputs
-    PORTB = 0x01;               // set bit zero to indicate Powered status
-#endif
-    while (U1CONbits.SE0) {}
     166a:	00 00 00    	nop       
 
 0000166c <.L4>:
@@ -1672,100 +1634,68 @@ void InitUSB(void) {
     1670:	00 80 60    	and.w     w1, w0, w0
     1672:	00 00 e0    	cp0.w     w0
     1674:	fb ff 3a    	bra       NZ, 0x166c <.L4>
-}
     1676:	00 80 fa    	ulnk      
     1678:	00 00 06    	return    
 
 0000167a <_ServiceUSB>:
-
-void ServiceUSB(void) {
     167a:	06 00 fa    	lnk       #0x6
-    BUFDESC *buf_desc_ptr;
-    unsigned int *U1EP;
-    BYTE n;
-
-    if (U1IRbits.UERRIF) {
     167c:	50 24 80    	mov.w     0x48a, w0
     167e:	62 00 60    	and.w     w0, #0x2, w0
     1680:	00 00 e0    	cp0.w     w0
     1682:	05 00 32    	bra       Z, 0x168e <.L6>
-        U1EIR = 0xFF;           // clear all flags in U1EIR to clear U1EIR
     1684:	f0 0f 20    	mov.w     #0xff, w0
     1686:	70 24 88    	mov.w     w0, 0x48e
-        U1IR = U1IR_UERRIF;     // clear UERRIF
     1688:	20 00 20    	mov.w     #0x2, w0
     168a:	50 24 88    	mov.w     w0, 0x48a
     168c:	90 00 37    	bra       0x17ae <.L5>
 
 0000168e <.L6>:
-    } else if (U1IRbits.SOFIF) {
     168e:	50 24 80    	mov.w     0x48a, w0
     1690:	64 00 60    	and.w     w0, #0x4, w0
     1692:	00 00 e0    	cp0.w     w0
     1694:	03 00 32    	bra       Z, 0x169c <.L8>
-        U1IR = U1IR_SOFIF;      // clear SOFIF
     1696:	40 00 20    	mov.w     #0x4, w0
     1698:	50 24 88    	mov.w     w0, 0x48a
     169a:	89 00 37    	bra       0x17ae <.L5>
 
 0000169c <.L8>:
-    } else if (U1IRbits.IDLEIF) {
     169c:	50 24 80    	mov.w     0x48a, w0
     169e:	70 00 60    	and.w     w0, #0x10, w0
     16a0:	00 00 e0    	cp0.w     w0
     16a2:	03 00 32    	bra       Z, 0x16aa <.L9>
-        U1IR = U1IR_IDLEIF;     // clear IDLEIF
     16a4:	00 01 20    	mov.w     #0x10, w0
     16a6:	50 24 88    	mov.w     w0, 0x48a
     16a8:	82 00 37    	bra       0x17ae <.L5>
 
 000016aa <.L9>:
-//      U1PWRCbits.USUSPND = 1; // put USB module in suspend mode
-#ifdef SHOW_ENUM_STATUS
-        PORTB &= 0xE0;
-        PORTBbits.RB4 = 1;
-#endif
-    } else if (U1IRbits.RESUMEIF) {
     16aa:	51 24 80    	mov.w     0x48a, w1
     16ac:	00 02 20    	mov.w     #0x20, w0
     16ae:	00 80 60    	and.w     w1, w0, w0
     16b0:	00 00 e0    	cp0.w     w0
     16b2:	03 00 32    	bra       Z, 0x16ba <.L10>
-        U1IR = U1IR_RESUMEIF;   // clear RESUMEIF
     16b4:	00 02 20    	mov.w     #0x20, w0
     16b6:	50 24 88    	mov.w     w0, 0x48a
     16b8:	7a 00 37    	bra       0x17ae <.L5>
 
 000016ba <.L10>:
-//      U1PWRCbits.USUSPND = 0; // resume USB module operation
-#ifdef SHOW_ENUM_STATUS
-        PORTB &= 0xE0;
-        PORTB |= 0x01<<USB_USWSTAT;
-#endif
-    } else if (U1IRbits.STALLIF) {
     16ba:	51 24 80    	mov.w     0x48a, w1
     16bc:	00 08 20    	mov.w     #0x80, w0
     16be:	00 80 60    	and.w     w1, w0, w0
     16c0:	00 00 e0    	cp0.w     w0
     16c2:	03 00 32    	bra       Z, 0x16ca <.L11>
-        U1IR = U1IR_STALLIF;    // clear STALLIF
     16c4:	00 08 20    	mov.w     #0x80, w0
     16c6:	50 24 88    	mov.w     w0, 0x48a
     16c8:	72 00 37    	bra       0x17ae <.L5>
 
 000016ca <.L11>:
-    } else if (U1IRbits.URSTIF) {
     16ca:	50 24 80    	mov.w     0x48a, w0
     16cc:	61 00 60    	and.w     w0, #0x1, w0
     16ce:	00 00 e0    	cp0.w     w0
     16d0:	34 00 32    	bra       Z, 0x173a <.L12>
-        USB_curr_config = 0x00;
     16d2:	3d 68 ef    	clr.b     0x83d
-        while (U1IRbits.TRNIF) {
     16d4:	08 00 37    	bra       0x16e6 <.L13>
 
 000016d6 <.L14>:
-            U1IR = U1IR_TRNIF;  // clear TRNIF to advance the U1STAT FIFO
     16d6:	80 00 20    	mov.w     #0x8, w0
     16d8:	50 24 88    	mov.w     w0, 0x48a
 	...
@@ -1775,23 +1705,13 @@ void ServiceUSB(void) {
     16e8:	68 00 60    	and.w     w0, #0x8, w0
     16ea:	00 00 e0    	cp0.w     w0
     16ec:	f4 ff 3a    	bra       NZ, 0x16d6 <.L14>
-            __builtin_nop();    // wait for six instruction cycles...
-            __builtin_nop();
-            __builtin_nop();
-            __builtin_nop();
-            __builtin_nop();
-            __builtin_nop();    // ...to allow a pending TRNIF to appear
-        }
-        U1EP = (unsigned int *)&U1EP0;
     16ee:	a0 4a 20    	mov.w     #0x4aa, w0
     16f0:	10 07 98    	mov.w     w0, [w14+2]
-        for (n = 0; n<16; n++)
     16f2:	00 40 eb    	clr.b     w0
     16f4:	00 4f 78    	mov.b     w0, [w14]
     16f6:	07 00 37    	bra       0x1706 <.L15>
 
 000016f8 <.L16>:
-            U1EP[n] = ENDPT_DISABLED;   // clear all EP control registers to disable all endpoints
     16f8:	1e 80 fb    	ze        [w14], w0
     16fa:	00 00 40    	add.w     w0, w0, w0
     16fc:	9e 00 90    	mov.w     [w14+2], w1
@@ -1804,85 +1724,56 @@ void ServiceUSB(void) {
     1706:	1e 40 78    	mov.b     [w14], w0
     1708:	ef 4f 50    	sub.b     w0, #0xf, [w15]
     170a:	f6 ff 36    	bra       LEU, 0x16f8 <.L16>
-        BD[EP0OUT].bytecount = MAX_PACKET_SIZE;
     170c:	00 c0 20    	mov.w     #0xc00, w0
     170e:	01 c4 b3    	mov.b     #0x40, w1
     1710:	01 48 78    	mov.b     w1, [w0]
-        BD[EP0OUT].address = EP0_OUT_buffer;    // EP0 OUT gets a buffer
     1712:	60 aa 20    	mov.w     #0xaa6, w0
     1714:	10 60 88    	mov.w     w0, 0xc02
-        BD[EP0OUT].status = 0x88;               // set UOWN bit (USB can write)
     1716:	10 c0 20    	mov.w     #0xc01, w0
     1718:	81 c8 b3    	mov.b     #0x88, w1
     171a:	01 48 78    	mov.b     w1, [w0]
-        BD[EP0IN].address = EP0_IN_buffer;      // EP0 IN gets a buffer
     171c:	60 ae 20    	mov.w     #0xae6, w0
     171e:	30 60 88    	mov.w     w0, 0xc06
-        BD[EP0IN].status = 0x08;                // clear UOWN bit (MCU can write)
     1720:	50 c0 20    	mov.w     #0xc05, w0
     1722:	81 c0 b3    	mov.b     #0x8, w1
     1724:	01 48 78    	mov.b     w1, [w0]
-        U1ADDR = 0x00;                  // set USB Address to 0
     1726:	96 24 ef    	clr.w     0x496
-        U1IR = 0xFF;                    // clear all the USB interrupt flags
     1728:	f0 0f 20    	mov.w     #0xff, w0
     172a:	50 24 88    	mov.w     w0, 0x48a
-        U1EP0 = ENDPT_CONTROL;          // EP0 is a control pipe and requires an ACK
     172c:	d0 00 20    	mov.w     #0xd, w0
     172e:	50 25 88    	mov.w     w0, 0x4aa
-//      U1EIE = 0x00FF;                 // enable all USB error interrupts
-        USB_USWSTAT = DEFAULT_STATE;
     1730:	10 c0 b3    	mov.b     #0x1, w0
     1732:	40 e8 b7    	mov.b     WREG, 0x840
-        USB_device_status = 0x01;       // self powered, remote wakeup disabled
     1734:	10 c0 b3    	mov.b     #0x1, w0
     1736:	3e e8 b7    	mov.b     WREG, 0x83e
     1738:	3a 00 37    	bra       0x17ae <.L5>
 
 0000173a <.L12>:
-#ifdef SHOW_ENUM_STATUS
-        PORTB &= 0xE0;
-        PORTBbits.RB1 = 1;              // set bit 1 of PORTB to indicate Powered state
-#endif
-    } else if (U1IRbits.TRNIF) {
     173a:	50 24 80    	mov.w     0x48a, w0
     173c:	68 00 60    	and.w     w0, #0x8, w0
     173e:	00 00 e0    	cp0.w     w0
     1740:	36 00 32    	bra       Z, 0x17ae <.L5>
-        buf_desc_ptr = &BD[U1STAT>>3];  // ENDPT and DIR bits of U1STAT provide the offset into the buffer descriptor table
     1742:	90 24 80    	mov.w     0x492, w0
     1744:	43 00 de    	lsr.w     w0, #0x3, w0
     1746:	c2 00 dd    	sl.w      w0, #0x2, w1
     1748:	00 c0 20    	mov.w     #0xc00, w0
     174a:	00 80 40    	add.w     w1, w0, w0
     174c:	20 07 98    	mov.w     w0, [w14+4]
-        USB_buffer_desc.status = buf_desc_ptr->status;
     174e:	2e 00 90    	mov.w     [w14+4], w0
     1750:	10 40 90    	mov.b     [w0+1], w0
     1752:	31 e8 b7    	mov.b     WREG, 0x831
-        USB_buffer_desc.bytecount = buf_desc_ptr->bytecount;
     1754:	2e 00 90    	mov.w     [w14+4], w0
     1756:	10 40 78    	mov.b     [w0], w0
     1758:	30 e8 b7    	mov.b     WREG, 0x830
-        USB_buffer_desc.address = buf_desc_ptr->address;
     175a:	2e 00 90    	mov.w     [w14+4], w0
     175c:	10 00 90    	mov.w     [w0+2], w0
     175e:	90 41 88    	mov.w     w0, 0x832
-        USB_USTAT = U1STAT;             // save the USB status register
     1760:	90 24 80    	mov.w     0x492, w0
     1762:	00 40 78    	mov.b     w0, w0
     1764:	3f e8 b7    	mov.b     WREG, 0x83f
-        U1IR = U1IR_TRNIF;              // clear TRNIF
     1766:	80 00 20    	mov.w     #0x8, w0
     1768:	50 24 88    	mov.w     w0, 0x48a
-#ifdef SHOW_ENUM_STATUS
-        if (USB_USTAT&0xF0==EP0) {      // toggle RB5 to reflect EP0 activity
-            PORTB ^= 0x20;
-        }
-#endif
-        USB_error_flags = 0x00;         // clear USB error flags
     176a:	3c 68 ef    	clr.b     0x83c
-        switch (USB_buffer_desc.status&0x3C) {    // extract PID bits
     176c:	31 c8 bf    	mov.b     0x831, WREG
     176e:	80 80 fb    	ze        w0, w1
     1770:	c0 03 20    	mov.w     #0x3c, w0
@@ -1898,119 +1789,87 @@ void ServiceUSB(void) {
     1784:	05 00 37    	bra       0x1790 <.L17>
 
 00001786 <.L20>:
-            case TOKEN_SETUP:
-                ProcessSetupToken();
     1786:	15 00 07    	rcall     0x17b2 <_ProcessSetupToken> <L0> <.LFB2> <.LFE1>
-                break;
     1788:	03 00 37    	bra       0x1790 <.L17>
 
 0000178a <.L19>:
-            case TOKEN_IN:
-                ProcessInToken();
     178a:	da 02 07    	rcall     0x1d40 <_ProcessInToken> <L0> <.LFB4> <.LFE3>
-                break;
     178c:	01 00 37    	bra       0x1790 <.L17>
 
 0000178e <.L18>:
-            case TOKEN_OUT:
-                ProcessOutToken();
     178e:	0c 03 07    	rcall     0x1da8 <_ProcessOutToken> <L0> <.LFB5> <.LFE4>
 
 00001790 <.L17>:
-        }
-        if (USB_error_flags&0x01) {             // if there was a Request Error...
     1790:	3c c8 bf    	mov.b     0x83c, WREG
     1792:	00 80 fb    	ze        w0, w0
     1794:	61 00 60    	and.w     w0, #0x1, w0
     1796:	00 40 78    	mov.b     w0, w0
     1798:	00 04 e0    	cp0.b     w0
     179a:	09 00 32    	bra       Z, 0x17ae <.L5>
-            BD[EP0OUT].bytecount = MAX_PACKET_SIZE;   // ...get ready to receive the next Setup token...
     179c:	00 c0 20    	mov.w     #0xc00, w0
     179e:	01 c4 b3    	mov.b     #0x40, w1
     17a0:	01 48 78    	mov.b     w1, [w0]
-            BD[EP0IN].status = 0x84;
     17a2:	50 c0 20    	mov.w     #0xc05, w0
     17a4:	41 c8 b3    	mov.b     #0x84, w1
     17a6:	01 48 78    	mov.b     w1, [w0]
-            BD[EP0OUT].status = 0x84;                 // ...and issue a protocol stall on EP0
     17a8:	10 c0 20    	mov.w     #0xc01, w0
     17aa:	41 c8 b3    	mov.b     #0x84, w1
     17ac:	01 48 78    	mov.b     w1, [w0]
 
 000017ae <.L5>:
-        }
-    }
-}
     17ae:	00 80 fa    	ulnk      
     17b0:	00 00 06    	return    
 
 000017b2 <_ProcessSetupToken>:
-
-void ProcessSetupToken(void) {
     17b2:	02 00 fa    	lnk       #0x2
-    BYTE *buf_ptr;
-
-    buf_ptr = USB_buffer_desc.address;
     17b4:	91 41 80    	mov.w     0x832, w1
     17b6:	01 0f 78    	mov.w     w1, [w14]
-    USB_setup.bmRequestType = *buf_ptr++;   // copy the setup packet received from the host
     17b8:	1e 00 78    	mov.w     [w14], w0
     17ba:	90 40 78    	mov.b     [w0], w1
     17bc:	40 83 20    	mov.w     #0x834, w0
     17be:	01 48 78    	mov.b     w1, [w0]
     17c0:	1e 0f e8    	inc.w     [w14], [w14]
-    USB_setup.bRequest = *buf_ptr++;
     17c2:	1e 00 78    	mov.w     [w14], w0
     17c4:	90 40 78    	mov.b     [w0], w1
     17c6:	40 83 20    	mov.w     #0x834, w0
     17c8:	11 40 98    	mov.b     w1, [w0+1]
     17ca:	1e 0f e8    	inc.w     [w14], [w14]
-    USB_setup.wValue.b[0] = *buf_ptr++;
     17cc:	1e 00 78    	mov.w     [w14], w0
     17ce:	90 40 78    	mov.b     [w0], w1
     17d0:	40 83 20    	mov.w     #0x834, w0
     17d2:	21 40 98    	mov.b     w1, [w0+2]
     17d4:	1e 0f e8    	inc.w     [w14], [w14]
-    USB_setup.wValue.b[1] = *buf_ptr++;
     17d6:	1e 00 78    	mov.w     [w14], w0
     17d8:	90 40 78    	mov.b     [w0], w1
     17da:	40 83 20    	mov.w     #0x834, w0
     17dc:	31 40 98    	mov.b     w1, [w0+3]
     17de:	1e 0f e8    	inc.w     [w14], [w14]
-    USB_setup.wIndex.b[0] = *buf_ptr++;
     17e0:	1e 00 78    	mov.w     [w14], w0
     17e2:	90 40 78    	mov.b     [w0], w1
     17e4:	40 83 20    	mov.w     #0x834, w0
     17e6:	41 40 98    	mov.b     w1, [w0+4]
     17e8:	1e 0f e8    	inc.w     [w14], [w14]
-    USB_setup.wIndex.b[1] = *buf_ptr++;
     17ea:	1e 00 78    	mov.w     [w14], w0
     17ec:	90 40 78    	mov.b     [w0], w1
     17ee:	40 83 20    	mov.w     #0x834, w0
     17f0:	51 40 98    	mov.b     w1, [w0+5]
     17f2:	1e 0f e8    	inc.w     [w14], [w14]
-    USB_setup.wLength.b[0] = *buf_ptr++;
     17f4:	1e 00 78    	mov.w     [w14], w0
     17f6:	90 40 78    	mov.b     [w0], w1
     17f8:	40 83 20    	mov.w     #0x834, w0
     17fa:	61 40 98    	mov.b     w1, [w0+6]
     17fc:	1e 0f e8    	inc.w     [w14], [w14]
-    USB_setup.wLength.b[1] = *buf_ptr++;
     17fe:	1e 00 78    	mov.w     [w14], w0
     1800:	90 40 78    	mov.b     [w0], w1
     1802:	40 83 20    	mov.w     #0x834, w0
     1804:	71 40 98    	mov.b     w1, [w0+7]
     1806:	1e 0f e8    	inc.w     [w14], [w14]
-    BD[EP0OUT].bytecount = MAX_PACKET_SIZE;     // reset the EP0 OUT byte count
     1808:	00 c0 20    	mov.w     #0xc00, w0
     180a:	01 c4 b3    	mov.b     #0x40, w1
     180c:	01 48 78    	mov.b     w1, [w0]
-    BD[EP0IN].status = 0x08;                   // return the EP0 IN buffer to us (dequeue any pending requests)
     180e:	50 c0 20    	mov.w     #0xc05, w0
     1810:	81 c0 b3    	mov.b     #0x8, w1
     1812:	01 48 78    	mov.b     w1, [w0]
-    BD[EP0OUT].status = (!(USB_setup.bmRequestType&0x80) && (USB_setup.wLength.w)) ? 0xC8:0x88;    // set EP0 OUT UOWN back to USB and DATA0/DATA1 packet according to the request type
     1814:	40 83 20    	mov.w     #0x834, w0
     1816:	10 40 78    	mov.b     [w0], w0
     1818:	00 04 e0    	cp0.b     w0
@@ -2028,17 +1887,13 @@ void ProcessSetupToken(void) {
 0000182a <.L23>:
     182a:	11 c0 20    	mov.w     #0xc01, w1
     182c:	80 48 78    	mov.b     w0, [w1]
-    U1CONbits.PKTDIS = 0;                 // assuming there is nothing to dequeue, clear the packet disable bit
     182e:	94 a4 a9    	bclr.b    0x494, #0x5
-    USB_request.setup.bmRequestType = NO_REQUEST;   // clear the device request in process
     1830:	60 b2 20    	mov.w     #0xb26, w0
     1832:	80 c0 eb    	setm.b    w1
     1834:	01 48 78    	mov.b     w1, [w0]
-    USB_request.setup.bRequest = NO_REQUEST;
     1836:	70 b2 20    	mov.w     #0xb27, w0
     1838:	80 c0 eb    	setm.b    w1
     183a:	01 48 78    	mov.b     w1, [w0]
-    switch (USB_setup.bmRequestType&0x60) {    // extract request type bits
     183c:	40 83 20    	mov.w     #0x834, w0
     183e:	10 40 78    	mov.b     [w0], w0
     1840:	80 80 fb    	ze        w0, w1
@@ -2052,44 +1907,24 @@ void ProcessSetupToken(void) {
     1850:	04 00 37    	bra       0x185a <.L28>
 
 00001852 <.L25>:
-        case STANDARD_REQ:
-            StandardRequests();
     1852:	08 00 07    	rcall     0x1864 <_StandardRequests> <L0> <.LFB3> <.LFE2>
-            break;
     1854:	05 00 37    	bra       0x1860 <.L21>
 
 00001856 <.L26>:
-        case VENDOR_REQ:
-            VendorRequests();
     1856:	d8 0c 07    	rcall     0x3208 <_VendorRequests> <L0> <.LFB1> <.LFE0>
-            break;
     1858:	03 00 37    	bra       0x1860 <.L21>
 
 0000185a <.L28>:
-        case CLASS_REQ:
-//            ClassRequests();
-//            break;
-        default:
-            USB_error_flags |= 0x01;    // set Request Error Flag
     185a:	3c c8 bf    	mov.b     0x83c, WREG
     185c:	00 04 a0    	bset.b    w0, #0x0
     185e:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001860 <.L21>:
-    }
-}
     1860:	00 80 fa    	ulnk      
     1862:	00 00 06    	return    
 
 00001864 <_StandardRequests>:
-
-void StandardRequests(void) {
     1864:	06 00 fa    	lnk       #0x6
-    BUFDESC *buf_desc_ptr;
-    unsigned int *U1EP;
-    BYTE n;
-
-    switch (USB_setup.bRequest) {
     1866:	40 83 20    	mov.w     #0x834, w0
     1868:	10 40 90    	mov.b     [w0+1], w0
     186a:	00 80 fb    	ze        w0, w0
@@ -2129,8 +1964,6 @@ void StandardRequests(void) {
     18a2:	49 02 37    	bra       0x1d36 <.L30>
 
 000018a4 <.L31>:
-        case GET_STATUS:
-            switch (USB_setup.bmRequestType&0x1F) { // extract request recipient bits
     18a4:	40 83 20    	mov.w     #0x834, w0
     18a6:	10 40 78    	mov.b     [w0], w0
     18a8:	00 80 fb    	ze        w0, w0
@@ -2141,31 +1974,23 @@ void StandardRequests(void) {
     18b2:	32 00 32    	bra       Z, 0x1918 <.L45>
     18b4:	00 00 e0    	cp0.w     w0
     18b6:	9a 00 3a    	bra       NZ, 0x19ec <.L128>
-                case RECIPIENT_DEVICE:
-                    BD[EP0IN].address[0] = USB_device_status;
     18b8:	30 60 80    	mov.w     0xc06, w0
     18ba:	e1 83 20    	mov.w     #0x83e, w1
     18bc:	91 40 78    	mov.b     [w1], w1
     18be:	01 48 78    	mov.b     w1, [w0]
-                    BD[EP0IN].address[1] = 0x00;
     18c0:	30 60 80    	mov.w     0xc06, w0
     18c2:	00 00 e8    	inc.w     w0, w0
     18c4:	80 40 eb    	clr.b     w1
     18c6:	01 48 78    	mov.b     w1, [w0]
-                    BD[EP0IN].bytecount = 0x02;
     18c8:	40 c0 20    	mov.w     #0xc04, w0
     18ca:	21 c0 b3    	mov.b     #0x2, w1
     18cc:	01 48 78    	mov.b     w1, [w0]
-                    BD[EP0IN].status = 0xC8;                     // send packet as DATA1, set UOWN bit
     18ce:	50 c0 20    	mov.w     #0xc05, w0
     18d0:	81 cc b3    	mov.b     #0xc8, w1
     18d2:	01 48 78    	mov.b     w1, [w0]
-                    break;
     18d4:	8f 00 37    	bra       0x19f4 <.L46>
 
 000018d6 <.L44>:
-                case RECIPIENT_INTERFACE:
-                    switch (USB_USWSTAT) {
     18d6:	40 c8 bf    	mov.b     0x840, WREG
     18d8:	00 80 fb    	ze        w0, w0
     18da:	e2 0f 50    	sub.w     w0, #0x2, [w15]
@@ -2175,56 +2000,40 @@ void StandardRequests(void) {
     18e2:	19 00 37    	bra       0x1916 <.L47>
 
 000018e4 <.L48>:
-                        case ADDRESS_STATE:
-                            USB_error_flags |= 0x01;        // set Request Error Flag
     18e4:	3c c8 bf    	mov.b     0x83c, WREG
     18e6:	00 04 a0    	bset.b    w0, #0x0
     18e8:	3c e8 b7    	mov.b     WREG, 0x83c
-                            break;
     18ea:	15 00 37    	bra       0x1916 <.L47>
 
 000018ec <.L49>:
-                        case CONFIG_STATE:
-                            if (USB_setup.wIndex.b[0]<NUM_INTERFACES) {
     18ec:	40 83 20    	mov.w     #0x834, w0
     18ee:	40 40 90    	mov.b     [w0+4], w0
     18f0:	00 04 e0    	cp0.b     w0
     18f2:	0e 00 3a    	bra       NZ, 0x1910 <.L50>
-                                BD[EP0IN].address[0] = 0x00;
     18f4:	30 60 80    	mov.w     0xc06, w0
     18f6:	80 40 eb    	clr.b     w1
     18f8:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].address[1] = 0x00;
     18fa:	30 60 80    	mov.w     0xc06, w0
     18fc:	00 00 e8    	inc.w     w0, w0
     18fe:	80 40 eb    	clr.b     w1
     1900:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].bytecount = 0x02;
     1902:	40 c0 20    	mov.w     #0xc04, w0
     1904:	21 c0 b3    	mov.b     #0x2, w1
     1906:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].status = 0xC8;         // send packet as DATA1, set UOWN bit
     1908:	50 c0 20    	mov.w     #0xc05, w0
     190a:	81 cc b3    	mov.b     #0xc8, w1
     190c:	01 48 78    	mov.b     w1, [w0]
     190e:	03 00 37    	bra       0x1916 <.L47>
 
 00001910 <.L50>:
-                            } else {
-                                USB_error_flags |= 0x01;    // set Request Error Flag
     1910:	3c c8 bf    	mov.b     0x83c, WREG
     1912:	00 04 a0    	bset.b    w0, #0x0
     1914:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001916 <.L47>:
-                            }
-                    }
-                    break;
     1916:	6e 00 37    	bra       0x19f4 <.L46>
 
 00001918 <.L45>:
-                case RECIPIENT_ENDPOINT:
-                    switch (USB_USWSTAT) {
     1918:	40 c8 bf    	mov.b     0x840, WREG
     191a:	00 80 fb    	ze        w0, w0
     191c:	e2 0f 50    	sub.w     w0, #0x2, [w15]
@@ -2234,15 +2043,12 @@ void StandardRequests(void) {
     1924:	5f 00 37    	bra       0x19e4 <.L129>
 
 00001926 <.L52>:
-                        case ADDRESS_STATE:
-                            if (!(USB_setup.wIndex.b[0]&0x0F)) {    // get EP, strip off direction bit and see if it is EP0
     1926:	40 83 20    	mov.w     #0x834, w0
     1928:	40 40 90    	mov.b     [w0+4], w0
     192a:	00 80 fb    	ze        w0, w0
     192c:	6f 00 60    	and.w     w0, #0xf, w0
     192e:	00 00 e0    	cp0.w     w0
     1930:	1e 00 3a    	bra       NZ, 0x196e <.L54>
-                                BD[EP0IN].address[0] = (((USB_setup.wIndex.b[0]&0x80) ? BD[EP0IN].status:BD[EP0OUT].status)&0x04)>>2;    // return the BSTALL bit of EP0 IN or OUT, whichever was requested
     1932:	31 60 80    	mov.w     0xc06, w1
     1934:	40 83 20    	mov.w     #0x834, w0
     1936:	40 40 90    	mov.b     [w0+4], w0
@@ -2266,43 +2072,32 @@ void StandardRequests(void) {
 
 00001956 <.L56>:
     1956:	80 48 78    	mov.b     w0, [w1]
-                                BD[EP0IN].address[1] = 0x00;
     1958:	30 60 80    	mov.w     0xc06, w0
     195a:	00 00 e8    	inc.w     w0, w0
     195c:	80 40 eb    	clr.b     w1
     195e:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].bytecount = 0x02;
     1960:	40 c0 20    	mov.w     #0xc04, w0
     1962:	21 c0 b3    	mov.b     #0x2, w1
     1964:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].status = 0xC8;         // send packet as DATA1, set UOWN bit
     1966:	50 c0 20    	mov.w     #0xc05, w0
     1968:	81 cc b3    	mov.b     #0xc8, w1
     196a:	01 48 78    	mov.b     w1, [w0]
     196c:	03 00 37    	bra       0x1974 <.L57>
 
 0000196e <.L54>:
-                            } else {
-                                USB_error_flags |= 0x01;    // set Request Error Flag
     196e:	3c c8 bf    	mov.b     0x83c, WREG
     1970:	00 04 a0    	bset.b    w0, #0x0
     1972:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001974 <.L57>:
-                            }
-                            break;
     1974:	3a 00 37    	bra       0x19ea <.L58>
 
 00001976 <.L53>:
-                        case CONFIG_STATE:
-                            U1EP = (unsigned int *)&U1EP0;
     1976:	a0 4a 20    	mov.w     #0x4aa, w0
     1978:	10 07 98    	mov.w     w0, [w14+2]
-                            n = USB_setup.wIndex.b[0]&0x0F;    // get EP and strip off direction bit for offset from U1EP0
     197a:	40 83 20    	mov.w     #0x834, w0
     197c:	40 40 90    	mov.b     [w0+4], w0
     197e:	6f 4f 60    	and.b     w0, #0xf, [w14]
-                            buf_desc_ptr = &BD[EP0OUT]+((n<<1)|((USB_setup.wIndex.b[0]&0x80) ? 0x01:0x00));    // compute pointer to the buffer descriptor for the specified EP
     1980:	1e 80 fb    	ze        [w14], w0
     1982:	00 00 40    	add.w     w0, w0, w0
     1984:	80 00 78    	mov.w     w0, w1
@@ -2315,7 +2110,6 @@ void StandardRequests(void) {
     1992:	00 c0 20    	mov.w     #0xc00, w0
     1994:	00 80 40    	add.w     w1, w0, w0
     1996:	20 07 98    	mov.w     w0, [w14+4]
-                            if (U1EP[n]&((USB_setup.wIndex.b[0]&0x80) ? 0x04:0x08)) { // if the specified EP is enabled for transfers in the specified direction...
     1998:	1e 80 fb    	ze        [w14], w0
     199a:	00 00 40    	add.w     w0, w0, w0
     199c:	9e 00 90    	mov.w     [w14+2], w1
@@ -2335,7 +2129,6 @@ void StandardRequests(void) {
     19b0:	00 80 60    	and.w     w1, w0, w0
     19b2:	00 00 e0    	cp0.w     w0
     19b4:	13 00 32    	bra       Z, 0x19dc <.L61>
-                                BD[EP0IN].address[0] = ((buf_desc_ptr->status)&0x04)>>2;    // ...return the BSTALL bit of the specified EP
     19b6:	30 60 80    	mov.w     0xc06, w0
     19b8:	ae 00 90    	mov.w     [w14+4], w1
     19ba:	91 40 90    	mov.b     [w1+1], w1
@@ -2344,62 +2137,44 @@ void StandardRequests(void) {
     19c0:	c2 88 de    	asr.w     w1, #0x2, w1
     19c2:	81 40 78    	mov.b     w1, w1
     19c4:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].address[1] = 0x00;
     19c6:	30 60 80    	mov.w     0xc06, w0
     19c8:	00 00 e8    	inc.w     w0, w0
     19ca:	80 40 eb    	clr.b     w1
     19cc:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].bytecount = 0x02;
     19ce:	40 c0 20    	mov.w     #0xc04, w0
     19d0:	21 c0 b3    	mov.b     #0x2, w1
     19d2:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].status = 0xC8;         // send packet as DATA1, set UOWN bit
     19d4:	50 c0 20    	mov.w     #0xc05, w0
     19d6:	81 cc b3    	mov.b     #0xc8, w1
     19d8:	01 48 78    	mov.b     w1, [w0]
     19da:	03 00 37    	bra       0x19e2 <.L62>
 
 000019dc <.L61>:
-                            } else {
-                                USB_error_flags |= 0x01;    // set Request Error Flag
     19dc:	3c c8 bf    	mov.b     0x83c, WREG
     19de:	00 04 a0    	bset.b    w0, #0x0
     19e0:	3c e8 b7    	mov.b     WREG, 0x83c
 
 000019e2 <.L62>:
-                            }
-                            break;
     19e2:	03 00 37    	bra       0x19ea <.L58>
 
 000019e4 <.L129>:
-                        default:
-                            USB_error_flags |= 0x01;        // set Request Error Flag
     19e4:	3c c8 bf    	mov.b     0x83c, WREG
     19e6:	00 04 a0    	bset.b    w0, #0x0
     19e8:	3c e8 b7    	mov.b     WREG, 0x83c
 
 000019ea <.L58>:
-                    }
-                    break;
     19ea:	04 00 37    	bra       0x19f4 <.L46>
 
 000019ec <.L128>:
-                default:
-                    USB_error_flags |= 0x01;                // set Request Error Flag
     19ec:	3c c8 bf    	mov.b     0x83c, WREG
     19ee:	00 04 a0    	bset.b    w0, #0x0
     19f0:	3c e8 b7    	mov.b     WREG, 0x83c
-            }
-            break;
     19f2:	a4 01 37    	bra       0x1d3c <.L29>
 
 000019f4 <.L46>:
     19f4:	a3 01 37    	bra       0x1d3c <.L29>
 
 000019f6 <.L32>:
-        case CLEAR_FEATURE:
-        case SET_FEATURE:
-            switch (USB_setup.bmRequestType&0x1F) {         // extract request recipient bits
     19f6:	40 83 20    	mov.w     #0x834, w0
     19f8:	10 40 78    	mov.b     [w0], w0
     19fa:	00 80 fb    	ze        w0, w0
@@ -2411,59 +2186,43 @@ void StandardRequests(void) {
     1a06:	86 00 37    	bra       0x1b14 <.L130>
 
 00001a08 <.L65>:
-                case RECIPIENT_DEVICE:
-                    switch (USB_setup.wValue.b[0]) {
     1a08:	40 83 20    	mov.w     #0x834, w0
     1a0a:	20 40 90    	mov.b     [w0+2], w0
     1a0c:	00 80 fb    	ze        w0, w0
     1a0e:	e1 0f 50    	sub.w     w0, #0x1, [w15]
     1a10:	12 00 3a    	bra       NZ, 0x1a36 <.L131>
-                        case DEVICE_REMOTE_WAKEUP:
-                            if (USB_setup.bRequest==CLEAR_FEATURE)
     1a12:	40 83 20    	mov.w     #0x834, w0
     1a14:	10 40 90    	mov.b     [w0+1], w0
     1a16:	e1 4f 50    	sub.b     w0, #0x1, [w15]
     1a18:	04 00 3a    	bra       NZ, 0x1a22 <.L69>
-                                USB_device_status &= 0xFE;
     1a1a:	3e c8 bf    	mov.b     0x83e, WREG
     1a1c:	00 04 a1    	bclr.b    w0, #0x0
     1a1e:	3e e8 b7    	mov.b     WREG, 0x83e
     1a20:	03 00 37    	bra       0x1a28 <.L70>
 
 00001a22 <.L69>:
-                            else
-                                USB_device_status |= 0x01;
     1a22:	3e c8 bf    	mov.b     0x83e, WREG
     1a24:	00 04 a0    	bset.b    w0, #0x0
     1a26:	3e e8 b7    	mov.b     WREG, 0x83e
 
 00001a28 <.L70>:
-                            BD[EP0IN].bytecount = 0x00;          // set EP0 IN byte count to 0
     1a28:	40 c0 20    	mov.w     #0xc04, w0
     1a2a:	80 40 eb    	clr.b     w1
     1a2c:	01 48 78    	mov.b     w1, [w0]
-                            BD[EP0IN].status = 0xC8;             // send packet as DATA1, set UOWN bit
     1a2e:	50 c0 20    	mov.w     #0xc05, w0
     1a30:	81 cc b3    	mov.b     #0xc8, w1
     1a32:	01 48 78    	mov.b     w1, [w0]
-                            break;
     1a34:	03 00 37    	bra       0x1a3c <.L71>
 
 00001a36 <.L131>:
-                        default:
-                            USB_error_flags |= 0x01;        // set Request Error Flag
     1a36:	3c c8 bf    	mov.b     0x83c, WREG
     1a38:	00 04 a0    	bset.b    w0, #0x0
     1a3a:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001a3c <.L71>:
-                    }
-                    break;
     1a3c:	6f 00 37    	bra       0x1b1c <.L72>
 
 00001a3e <.L66>:
-                case RECIPIENT_ENDPOINT:
-                    switch (USB_USWSTAT) {
     1a3e:	40 c8 bf    	mov.b     0x840, WREG
     1a40:	00 80 fb    	ze        w0, w0
     1a42:	e2 0f 50    	sub.w     w0, #0x2, [w15]
@@ -2473,49 +2232,37 @@ void StandardRequests(void) {
     1a4a:	60 00 37    	bra       0x1b0c <.L132>
 
 00001a4c <.L74>:
-                        case ADDRESS_STATE:
-                            if (!(USB_setup.wIndex.b[0]&0x0F)) {    // get EP, strip off direction bit, and see if its EP0
     1a4c:	40 83 20    	mov.w     #0x834, w0
     1a4e:	40 40 90    	mov.b     [w0+4], w0
     1a50:	00 80 fb    	ze        w0, w0
     1a52:	6f 00 60    	and.w     w0, #0xf, w0
     1a54:	00 00 e0    	cp0.w     w0
     1a56:	07 00 3a    	bra       NZ, 0x1a66 <.L76>
-                                BD[EP0IN].bytecount = 0x00;      // set EP0 IN byte count to 0
     1a58:	40 c0 20    	mov.w     #0xc04, w0
     1a5a:	80 40 eb    	clr.b     w1
     1a5c:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].status = 0xC8;         // send packet as DATA1, set UOWN bit
     1a5e:	50 c0 20    	mov.w     #0xc05, w0
     1a60:	81 cc b3    	mov.b     #0xc8, w1
     1a62:	01 48 78    	mov.b     w1, [w0]
     1a64:	03 00 37    	bra       0x1a6c <.L77>
 
 00001a66 <.L76>:
-                            } else {
-                                USB_error_flags |= 0x01;    // set Request Error Flag
     1a66:	3c c8 bf    	mov.b     0x83c, WREG
     1a68:	00 04 a0    	bset.b    w0, #0x0
     1a6a:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001a6c <.L77>:
-                            }
-                            break;
     1a6c:	52 00 37    	bra       0x1b12 <.L78>
 
 00001a6e <.L75>:
-                        case CONFIG_STATE:
-                            U1EP = (unsigned int *)&U1EP0;
     1a6e:	a0 4a 20    	mov.w     #0x4aa, w0
     1a70:	10 07 98    	mov.w     w0, [w14+2]
-                            if (n = USB_setup.wIndex.b[0]&0x0F) {    // get EP and strip off direction bit for offset from U1EP0, if not EP0...
     1a72:	40 83 20    	mov.w     #0x834, w0
     1a74:	40 40 90    	mov.b     [w0+4], w0
     1a76:	6f 4f 60    	and.b     w0, #0xf, [w14]
     1a78:	1e 40 78    	mov.b     [w14], w0
     1a7a:	00 04 e0    	cp0.b     w0
     1a7c:	3b 00 32    	bra       Z, 0x1af4 <.L79>
-                                buf_desc_ptr = &BD[(n<<1)|((USB_setup.wIndex.b[0]&0x80) ? 0x01:0x00)];    // compute pointer to the buffer descriptor for the specified EP
     1a7e:	1e 80 fb    	ze        [w14], w0
     1a80:	00 00 40    	add.w     w0, w0, w0
     1a82:	80 00 78    	mov.w     w0, w1
@@ -2528,12 +2275,10 @@ void StandardRequests(void) {
     1a90:	00 c0 20    	mov.w     #0xc00, w0
     1a92:	00 80 40    	add.w     w1, w0, w0
     1a94:	20 07 98    	mov.w     w0, [w14+4]
-                                if (USB_setup.wIndex.b[0]&0x80) {    // if the specified EP direction is IN...
     1a96:	40 83 20    	mov.w     #0x834, w0
     1a98:	40 40 90    	mov.b     [w0+4], w0
     1a9a:	00 04 e0    	cp0.b     w0
     1a9c:	16 00 3d    	bra       GE, 0x1aca <.L80>
-                                    if (U1EP[n]&0x04) {     // if EPn is enabled for IN transfers...
     1a9e:	1e 80 fb    	ze        [w14], w0
     1aa0:	00 00 40    	add.w     w0, w0, w0
     1aa2:	9e 00 90    	mov.w     [w14+2], w1
@@ -2542,7 +2287,6 @@ void StandardRequests(void) {
     1aa8:	64 00 60    	and.w     w0, #0x4, w0
     1aaa:	00 00 e0    	cp0.w     w0
     1aac:	0a 00 32    	bra       Z, 0x1ac2 <.L81>
-                                        buf_desc_ptr->status = (USB_setup.bRequest==CLEAR_FEATURE) ? 0x00:0x84;
     1aae:	40 83 20    	mov.w     #0x834, w0
     1ab0:	10 40 90    	mov.b     [w0+1], w0
     1ab2:	e1 4f 50    	sub.b     w0, #0x1, [w15]
@@ -2559,17 +2303,12 @@ void StandardRequests(void) {
     1ac0:	19 00 37    	bra       0x1af4 <.L79>
 
 00001ac2 <.L81>:
-                                    } else {
-                                        USB_error_flags |= 0x01;    // set Request Error Flag
     1ac2:	3c c8 bf    	mov.b     0x83c, WREG
     1ac4:	00 04 a0    	bset.b    w0, #0x0
     1ac6:	3c e8 b7    	mov.b     WREG, 0x83c
     1ac8:	15 00 37    	bra       0x1af4 <.L79>
 
 00001aca <.L80>:
-                                    }
-                                } else {                    // ...otherwise the specified EP direction is OUT, so...
-                                    if (U1EP[n]&0x08) {     // if EPn is enabled for OUT transfers...
     1aca:	1e 80 fb    	ze        [w14], w0
     1acc:	00 00 40    	add.w     w0, w0, w0
     1ace:	9e 00 90    	mov.w     [w14+2], w1
@@ -2578,7 +2317,6 @@ void StandardRequests(void) {
     1ad4:	68 00 60    	and.w     w0, #0x8, w0
     1ad6:	00 00 e0    	cp0.w     w0
     1ad8:	0a 00 32    	bra       Z, 0x1aee <.L84>
-                                        buf_desc_ptr->status = (USB_setup.bRequest==CLEAR_FEATURE) ? 0x88:0x84;
     1ada:	40 83 20    	mov.w     #0x834, w0
     1adc:	10 40 90    	mov.b     [w0+1], w0
     1ade:	e1 4f 50    	sub.b     w0, #0x1, [w15]
@@ -2595,82 +2333,51 @@ void StandardRequests(void) {
     1aec:	03 00 37    	bra       0x1af4 <.L79>
 
 00001aee <.L84>:
-                                    } else {
-                                        USB_error_flags |= 0x01;    // set Request Error Flag
     1aee:	3c c8 bf    	mov.b     0x83c, WREG
     1af0:	00 04 a0    	bset.b    w0, #0x0
     1af2:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001af4 <.L79>:
-                                    }
-                                }
-                            }
-                            if (!(USB_error_flags&0x01)) {  // if there was no Request Error...
     1af4:	3c c8 bf    	mov.b     0x83c, WREG
     1af6:	00 80 fb    	ze        w0, w0
     1af8:	61 00 60    	and.w     w0, #0x1, w0
     1afa:	00 00 e0    	cp0.w     w0
     1afc:	06 00 3a    	bra       NZ, 0x1b0a <.L87>
-                                BD[EP0IN].bytecount = 0x00;
     1afe:	40 c0 20    	mov.w     #0xc04, w0
     1b00:	80 40 eb    	clr.b     w1
     1b02:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].status = 0xC8;         // ...send packet as DATA1, set UOWN bit
     1b04:	50 c0 20    	mov.w     #0xc05, w0
     1b06:	81 cc b3    	mov.b     #0xc8, w1
     1b08:	01 48 78    	mov.b     w1, [w0]
 
 00001b0a <.L87>:
-                            }
-                            break;
     1b0a:	03 00 37    	bra       0x1b12 <.L78>
 
 00001b0c <.L132>:
-                        default:
-                            USB_error_flags |= 0x01;        // set Request Error Flag
     1b0c:	3c c8 bf    	mov.b     0x83c, WREG
     1b0e:	00 04 a0    	bset.b    w0, #0x0
     1b10:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001b12 <.L78>:
-                    }
-                    break;
     1b12:	04 00 37    	bra       0x1b1c <.L72>
 
 00001b14 <.L130>:
-                default:
-                    USB_error_flags |= 0x01;                // set Request Error Flag
     1b14:	3c c8 bf    	mov.b     0x83c, WREG
     1b16:	00 04 a0    	bset.b    w0, #0x0
     1b18:	3c e8 b7    	mov.b     WREG, 0x83c
-            }
-            break;
     1b1a:	10 01 37    	bra       0x1d3c <.L29>
 
 00001b1c <.L72>:
     1b1c:	0f 01 37    	bra       0x1d3c <.L29>
 
 00001b1e <.L33>:
-        case SET_ADDRESS:
-            if (USB_setup.wValue.b[0]>0x7F) {       // if new device address is illegal, send Request Error
     1b1e:	40 83 20    	mov.w     #0x834, w0
     1b20:	20 40 90    	mov.b     [w0+2], w0
     1b22:	00 04 e0    	cp0.b     w0
     1b24:	04 00 3d    	bra       GE, 0x1b2e <.L88>
-                USB_error_flags |= 0x01;            // set Request Error Flag
     1b26:	3c c8 bf    	mov.b     0x83c, WREG
     1b28:	00 04 a0    	bset.b    w0, #0x0
     1b2a:	3c e8 b7    	mov.b     WREG, 0x83c
-            } else {
-                USB_request.setup.bmRequestType = USB_setup.bmRequestType;  // processing a SET_ADDRESS request
-                USB_request.setup.bRequest = USB_setup.bRequest;
-                USB_request.setup.wValue.w = USB_setup.wValue.w;
-                USB_request.setup.wIndex.w = USB_setup.wIndex.w;
-                USB_request.setup.wLength.w = USB_setup.wLength.w;
-                BD[EP0IN].bytecount = 0x00;              // set EP0 IN byte count to 0
-                BD[EP0IN].status = 0xC8;                 // send packet as DATA1, set UOWN bit
-            }
-            break;
     1b2c:	07 01 37    	bra       0x1d3c <.L29>
 
 00001b2e <.L88>:
@@ -2700,30 +2407,23 @@ void StandardRequests(void) {
     1b5c:	ef 00 37    	bra       0x1d3c <.L29>
 
 00001b5e <.L34>:
-        case GET_DESCRIPTOR:
-            USB_request.setup.bmRequestType = USB_setup.bmRequestType;  // processing a GET_DESCRIPTOR request
     1b5e:	40 83 20    	mov.w     #0x834, w0
     1b60:	90 40 78    	mov.b     [w0], w1
     1b62:	60 b2 20    	mov.w     #0xb26, w0
     1b64:	01 48 78    	mov.b     w1, [w0]
-            USB_request.setup.bRequest = USB_setup.bRequest;
     1b66:	40 83 20    	mov.w     #0x834, w0
     1b68:	90 40 90    	mov.b     [w0+1], w1
     1b6a:	70 b2 20    	mov.w     #0xb27, w0
     1b6c:	01 48 78    	mov.b     w1, [w0]
-            USB_request.setup.wValue.w = USB_setup.wValue.w;
     1b6e:	40 83 20    	mov.w     #0x834, w0
     1b70:	10 00 90    	mov.w     [w0+2], w0
     1b72:	40 59 88    	mov.w     w0, 0xb28
-            USB_request.setup.wIndex.w = USB_setup.wIndex.w;
     1b74:	40 83 20    	mov.w     #0x834, w0
     1b76:	20 00 90    	mov.w     [w0+4], w0
     1b78:	50 59 88    	mov.w     w0, 0xb2a
-            USB_request.setup.wLength.w = USB_setup.wLength.w;
     1b7a:	40 83 20    	mov.w     #0x834, w0
     1b7c:	30 00 90    	mov.w     [w0+6], w0
     1b7e:	60 59 88    	mov.w     w0, 0xb2c
-            switch (USB_setup.wValue.b[1]) {
     1b80:	40 83 20    	mov.w     #0x834, w0
     1b82:	30 40 90    	mov.b     [w0+3], w0
     1b84:	00 80 fb    	ze        w0, w0
@@ -2733,99 +2433,72 @@ void StandardRequests(void) {
     1b8c:	36 00 32    	bra       Z, 0x1bfa <.L93>
     1b8e:	e1 0f 50    	sub.w     w0, #0x1, [w15]
     1b90:	5c 00 3a    	bra       NZ, 0x1c4a <.L133>
-                case DEVICE:
-                    USB_request.data_ptr = Device;
     1b92:	60 57 29    	mov.w     #0x9576, w0
     1b94:	70 59 88    	mov.w     w0, 0xb2e
-                    USB_request.bytes_left.w = (unsigned int)USB_request.data_ptr[0];
     1b96:	70 59 80    	mov.w     0xb2e, w0
     1b98:	10 40 78    	mov.b     [w0], w0
     1b9a:	00 80 fb    	ze        w0, w0
     1b9c:	80 59 88    	mov.w     w0, 0xb30
-                    if (USB_setup.wLength.w<USB_request.bytes_left.w) {
     1b9e:	40 83 20    	mov.w     #0x834, w0
     1ba0:	b0 00 90    	mov.w     [w0+6], w1
     1ba2:	80 59 80    	mov.w     0xb30, w0
     1ba4:	80 8f 50    	sub.w     w1, w0, [w15]
     1ba6:	03 00 31    	bra       C, 0x1bae <.L94>
-                        USB_request.bytes_left.w = USB_setup.wLength.w;
     1ba8:	40 83 20    	mov.w     #0x834, w0
     1baa:	30 00 90    	mov.w     [w0+6], w0
     1bac:	80 59 88    	mov.w     w0, 0xb30
 
 00001bae <.L94>:
-                    }
-                    SendDataPacket();
     1bae:	22 01 07    	rcall     0x1df4 <_SendDataPacket> <L0> <.LFB6> <.LFE5>
-                    break;
     1bb0:	50 00 37    	bra       0x1c52 <.L95>
 
 00001bb2 <.L92>:
-                case CONFIGURATION:
-                    switch (USB_setup.wValue.b[0]) {
     1bb2:	40 83 20    	mov.w     #0x834, w0
     1bb4:	20 40 90    	mov.b     [w0+2], w0
     1bb6:	00 80 fb    	ze        w0, w0
     1bb8:	00 00 e0    	cp0.w     w0
     1bba:	03 00 3a    	bra       NZ, 0x1bc2 <.L134>
-                        case 0:
-                            USB_request.data_ptr = Configuration1;
     1bbc:	80 58 29    	mov.w     #0x9588, w0
     1bbe:	70 59 88    	mov.w     w0, 0xb2e
-                            break;
     1bc0:	03 00 37    	bra       0x1bc8 <.L98>
 
 00001bc2 <.L134>:
-                        default:
-                            USB_error_flags |= 0x01;    // set Request Error Flag
     1bc2:	3c c8 bf    	mov.b     0x83c, WREG
     1bc4:	00 04 a0    	bset.b    w0, #0x0
     1bc6:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001bc8 <.L98>:
-                    }
-                    if (!(USB_error_flags&0x01)) {
     1bc8:	3c c8 bf    	mov.b     0x83c, WREG
     1bca:	00 80 fb    	ze        w0, w0
     1bcc:	61 00 60    	and.w     w0, #0x1, w0
     1bce:	00 00 e0    	cp0.w     w0
     1bd0:	13 00 3a    	bra       NZ, 0x1bf8 <.L99>
-                        USB_request.bytes_left.b[0] = USB_request.data_ptr[2];    // wTotalLength starting at an offset of 2
     1bd2:	70 59 80    	mov.w     0xb2e, w0
     1bd4:	00 80 e8    	inc2.w    w0, w0
     1bd6:	90 40 78    	mov.b     [w0], w1
     1bd8:	00 b3 20    	mov.w     #0xb30, w0
     1bda:	01 48 78    	mov.b     w1, [w0]
-                        USB_request.bytes_left.b[1] = USB_request.data_ptr[3];
     1bdc:	70 59 80    	mov.w     0xb2e, w0
     1bde:	63 00 40    	add.w     w0, #0x3, w0
     1be0:	90 40 78    	mov.b     [w0], w1
     1be2:	10 b3 20    	mov.w     #0xb31, w0
     1be4:	01 48 78    	mov.b     w1, [w0]
-                        if (USB_setup.wLength.w<USB_request.bytes_left.w) {
     1be6:	40 83 20    	mov.w     #0x834, w0
     1be8:	b0 00 90    	mov.w     [w0+6], w1
     1bea:	80 59 80    	mov.w     0xb30, w0
     1bec:	80 8f 50    	sub.w     w1, w0, [w15]
     1bee:	03 00 31    	bra       C, 0x1bf6 <.L100>
-                            USB_request.bytes_left.w = USB_setup.wLength.w;
     1bf0:	40 83 20    	mov.w     #0x834, w0
     1bf2:	30 00 90    	mov.w     [w0+6], w0
     1bf4:	80 59 88    	mov.w     w0, 0xb30
 
 00001bf6 <.L100>:
-                        }
-                        SendDataPacket();
     1bf6:	fe 00 07    	rcall     0x1df4 <_SendDataPacket> <L0> <.LFB6> <.LFE5>
 
 00001bf8 <.L99>:
-                    }
-                    break;
     1bf8:	2c 00 37    	bra       0x1c52 <.L95>
 
 00001bfa <.L93>:
-                case STRING:
-                    switch (USB_setup.wValue.b[0]) {
     1bfa:	40 83 20    	mov.w     #0x834, w0
     1bfc:	20 40 90    	mov.b     [w0+2], w0
     1bfe:	00 80 fb    	ze        w0, w0
@@ -2835,118 +2508,84 @@ void StandardRequests(void) {
     1c06:	08 00 32    	bra       Z, 0x1c18 <.L104>
     1c08:	00 00 e0    	cp0.w     w0
     1c0a:	09 00 3a    	bra       NZ, 0x1c1e <.L135>
-                        case 0:
-                            USB_request.data_ptr = String0;
     1c0c:	a0 59 29    	mov.w     #0x959a, w0
     1c0e:	70 59 88    	mov.w     w0, 0xb2e
-                            break;
     1c10:	09 00 37    	bra       0x1c24 <.L105>
 
 00001c12 <.L103>:
-                        case 1:
-                            USB_request.data_ptr = String1;
     1c12:	e0 59 29    	mov.w     #0x959e, w0
     1c14:	70 59 88    	mov.w     w0, 0xb2e
-                            break;
     1c16:	06 00 37    	bra       0x1c24 <.L105>
 
 00001c18 <.L104>:
-                        case 2:
-                            USB_request.data_ptr = String2;
     1c18:	80 5b 29    	mov.w     #0x95b8, w0
     1c1a:	70 59 88    	mov.w     w0, 0xb2e
-                            break;
     1c1c:	03 00 37    	bra       0x1c24 <.L105>
 
 00001c1e <.L135>:
-                        default:
-                            USB_error_flags |= 0x01;    // set Request Error Flag
     1c1e:	3c c8 bf    	mov.b     0x83c, WREG
     1c20:	00 04 a0    	bset.b    w0, #0x0
     1c22:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001c24 <.L105>:
-                    }
-                    if (!(USB_error_flags&0x01)) {
     1c24:	3c c8 bf    	mov.b     0x83c, WREG
     1c26:	00 80 fb    	ze        w0, w0
     1c28:	61 00 60    	and.w     w0, #0x1, w0
     1c2a:	00 00 e0    	cp0.w     w0
     1c2c:	0d 00 3a    	bra       NZ, 0x1c48 <.L106>
-                        USB_request.bytes_left.w = (unsigned int)USB_request.data_ptr[0];
     1c2e:	70 59 80    	mov.w     0xb2e, w0
     1c30:	10 40 78    	mov.b     [w0], w0
     1c32:	00 80 fb    	ze        w0, w0
     1c34:	80 59 88    	mov.w     w0, 0xb30
-                        if (USB_setup.wLength.w<USB_request.bytes_left.w) {
     1c36:	40 83 20    	mov.w     #0x834, w0
     1c38:	b0 00 90    	mov.w     [w0+6], w1
     1c3a:	80 59 80    	mov.w     0xb30, w0
     1c3c:	80 8f 50    	sub.w     w1, w0, [w15]
     1c3e:	03 00 31    	bra       C, 0x1c46 <.L107>
-                            USB_request.bytes_left.w = USB_setup.wLength.w;
     1c40:	40 83 20    	mov.w     #0x834, w0
     1c42:	30 00 90    	mov.w     [w0+6], w0
     1c44:	80 59 88    	mov.w     w0, 0xb30
 
 00001c46 <.L107>:
-                        }
-                        SendDataPacket();
     1c46:	d6 00 07    	rcall     0x1df4 <_SendDataPacket> <L0> <.LFB6> <.LFE5>
 
 00001c48 <.L106>:
-                    }
-                    break;
     1c48:	04 00 37    	bra       0x1c52 <.L95>
 
 00001c4a <.L133>:
-                default:
-                    USB_error_flags |= 0x01;            // set Request Error Flag
     1c4a:	3c c8 bf    	mov.b     0x83c, WREG
     1c4c:	00 04 a0    	bset.b    w0, #0x0
     1c4e:	3c e8 b7    	mov.b     WREG, 0x83c
-            }
-            break;
     1c50:	75 00 37    	bra       0x1d3c <.L29>
 
 00001c52 <.L95>:
     1c52:	74 00 37    	bra       0x1d3c <.L29>
 
 00001c54 <.L35>:
-        case GET_CONFIGURATION:
-            BD[EP0IN].address[0] = USB_curr_config;          // copy current device configuration to EP0 IN buffer
     1c54:	30 60 80    	mov.w     0xc06, w0
     1c56:	d1 83 20    	mov.w     #0x83d, w1
     1c58:	91 40 78    	mov.b     [w1], w1
     1c5a:	01 48 78    	mov.b     w1, [w0]
-            BD[EP0IN].bytecount = 0x01;
     1c5c:	40 c0 20    	mov.w     #0xc04, w0
     1c5e:	11 c0 b3    	mov.b     #0x1, w1
     1c60:	01 48 78    	mov.b     w1, [w0]
-            BD[EP0IN].status = 0xC8;                         // send packet as DATA1, set UOWN bit
     1c62:	50 c0 20    	mov.w     #0xc05, w0
     1c64:	81 cc b3    	mov.b     #0xc8, w1
     1c66:	01 48 78    	mov.b     w1, [w0]
-            break;
     1c68:	69 00 37    	bra       0x1d3c <.L29>
 
 00001c6a <.L36>:
-        case SET_CONFIGURATION:
-            if (USB_setup.wValue.b[0]<=NUM_CONFIGURATIONS) {
     1c6a:	40 83 20    	mov.w     #0x834, w0
     1c6c:	20 40 90    	mov.b     [w0+2], w0
     1c6e:	e1 4f 50    	sub.b     w0, #0x1, [w15]
     1c70:	22 00 3e    	bra       GTU, 0x1cb6 <.L108>
-                U1EP = (unsigned int *)&U1EP0;
     1c72:	a0 4a 20    	mov.w     #0x4aa, w0
     1c74:	10 07 98    	mov.w     w0, [w14+2]
-                for (n = 1; n<16; n++)
     1c76:	10 c0 b3    	mov.b     #0x1, w0
     1c78:	00 4f 78    	mov.b     w0, [w14]
     1c7a:	07 00 37    	bra       0x1c8a <.L109>
 
 00001c7c <.L110>:
-                    U1EP[n] = ENDPT_DISABLED;   // clear all EP control registers except for EP0 to disable EP1-EP15 prior to setting configuration
     1c7c:	1e 80 fb    	ze        [w14], w0
     1c7e:	00 00 40    	add.w     w0, w0, w0
     1c80:	9e 00 90    	mov.w     [w14+2], w1
@@ -2959,7 +2598,6 @@ void StandardRequests(void) {
     1c8a:	1e 40 78    	mov.b     [w14], w0
     1c8c:	ef 4f 50    	sub.b     w0, #0xf, [w15]
     1c8e:	f6 ff 36    	bra       LEU, 0x1c7c <.L110>
-                switch (USB_curr_config = USB_setup.wValue.b[0]) {
     1c90:	40 83 20    	mov.w     #0x834, w0
     1c92:	20 40 90    	mov.b     [w0+2], w0
     1c94:	3d e8 b7    	mov.b     WREG, 0x83d
@@ -2967,41 +2605,21 @@ void StandardRequests(void) {
     1c98:	00 80 fb    	ze        w0, w0
     1c9a:	00 00 e0    	cp0.w     w0
     1c9c:	03 00 3a    	bra       NZ, 0x1ca4 <.L136>
-                    case 0:
-                        USB_USWSTAT = ADDRESS_STATE;
     1c9e:	20 c0 b3    	mov.b     #0x2, w0
     1ca0:	40 e8 b7    	mov.b     WREG, 0x840
-#ifdef SHOW_ENUM_STATUS
-                        PORTB &= 0xE0;
-                        PORTBbits.RB2 = 1;
-#endif
-                        break;
     1ca2:	02 00 37    	bra       0x1ca8 <.L113>
 
 00001ca4 <.L136>:
-                    default:
-                        USB_USWSTAT = CONFIG_STATE;
     1ca4:	30 c0 b3    	mov.b     #0x3, w0
     1ca6:	40 e8 b7    	mov.b     WREG, 0x840
 
 00001ca8 <.L113>:
-#ifdef SHOW_ENUM_STATUS
-                        PORTB &= 0xE0;
-                        PORTBbits.RB3 = 1;
-#endif
-                }
-                BD[EP0IN].bytecount = 0x00;                  // set EP0 IN byte count to 0
     1ca8:	40 c0 20    	mov.w     #0xc04, w0
     1caa:	80 40 eb    	clr.b     w1
     1cac:	01 48 78    	mov.b     w1, [w0]
-                BD[EP0IN].status = 0xC8;                     // send packet as DATA1, set UOWN bit
     1cae:	50 c0 20    	mov.w     #0xc05, w0
     1cb0:	81 cc b3    	mov.b     #0xc8, w1
     1cb2:	01 48 78    	mov.b     w1, [w0]
-            } else {
-                USB_error_flags |= 0x01;                // set Request Error Flag
-            }
-            break;
     1cb4:	43 00 37    	bra       0x1d3c <.L29>
 
 00001cb6 <.L108>:
@@ -3011,47 +2629,32 @@ void StandardRequests(void) {
     1cbc:	3f 00 37    	bra       0x1d3c <.L29>
 
 00001cbe <.L37>:
-        case GET_INTERFACE:
-            switch (USB_USWSTAT) {
     1cbe:	40 c8 bf    	mov.b     0x840, WREG
     1cc0:	00 80 fb    	ze        w0, w0
     1cc2:	e3 0f 50    	sub.w     w0, #0x3, [w15]
     1cc4:	13 00 3a    	bra       NZ, 0x1cec <.L137>
-                case CONFIG_STATE:
-                    if (USB_setup.wIndex.b[0]<NUM_INTERFACES) {
     1cc6:	40 83 20    	mov.w     #0x834, w0
     1cc8:	40 40 90    	mov.b     [w0+4], w0
     1cca:	00 04 e0    	cp0.b     w0
     1ccc:	0a 00 3a    	bra       NZ, 0x1ce2 <.L117>
-                        BD[EP0IN].address[0] = 0x00;         // always send back 0 for bAlternateSetting
     1cce:	30 60 80    	mov.w     0xc06, w0
     1cd0:	80 40 eb    	clr.b     w1
     1cd2:	01 48 78    	mov.b     w1, [w0]
-                        BD[EP0IN].bytecount = 0x01;
     1cd4:	40 c0 20    	mov.w     #0xc04, w0
     1cd6:	11 c0 b3    	mov.b     #0x1, w1
     1cd8:	01 48 78    	mov.b     w1, [w0]
-                        BD[EP0IN].status = 0xC8;             // send packet as DATA1, set UOWN bit
     1cda:	50 c0 20    	mov.w     #0xc05, w0
     1cdc:	81 cc b3    	mov.b     #0xc8, w1
     1cde:	01 48 78    	mov.b     w1, [w0]
     1ce0:	03 00 37    	bra       0x1ce8 <.L118>
 
 00001ce2 <.L117>:
-                    } else {
-                        USB_error_flags |= 0x01;        // set Request Error Flag
     1ce2:	3c c8 bf    	mov.b     0x83c, WREG
     1ce4:	00 04 a0    	bset.b    w0, #0x0
     1ce6:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001ce8 <.L118>:
-                    }
-                    break;
     1ce8:	00 00 00    	nop       
-                default:
-                    USB_error_flags |= 0x01;            // set Request Error Flag
-            }
-            break;
     1cea:	28 00 37    	bra       0x1d3c <.L29>
 
 00001cec <.L137>:
@@ -3061,60 +2664,40 @@ void StandardRequests(void) {
     1cf2:	24 00 37    	bra       0x1d3c <.L29>
 
 00001cf4 <.L38>:
-        case SET_INTERFACE:
-            switch (USB_USWSTAT) {
     1cf4:	40 c8 bf    	mov.b     0x840, WREG
     1cf6:	00 80 fb    	ze        w0, w0
     1cf8:	e3 0f 50    	sub.w     w0, #0x3, [w15]
     1cfa:	19 00 3a    	bra       NZ, 0x1d2e <.L138>
-                case CONFIG_STATE:
-                    if (USB_setup.wIndex.b[0]<NUM_INTERFACES) {
     1cfc:	40 83 20    	mov.w     #0x834, w0
     1cfe:	40 40 90    	mov.b     [w0+4], w0
     1d00:	00 04 e0    	cp0.b     w0
     1d02:	10 00 3a    	bra       NZ, 0x1d24 <.L122>
-                        switch (USB_setup.wValue.b[0]) {
     1d04:	40 83 20    	mov.w     #0x834, w0
     1d06:	20 40 90    	mov.b     [w0+2], w0
     1d08:	00 80 fb    	ze        w0, w0
     1d0a:	00 00 e0    	cp0.w     w0
     1d0c:	07 00 3a    	bra       NZ, 0x1d1c <.L139>
-                            case 0:                     // currently support only bAlternateSetting of 0
-                                BD[EP0IN].bytecount = 0x00;  // set EP0 IN byte count to 0
     1d0e:	40 c0 20    	mov.w     #0xc04, w0
     1d10:	80 40 eb    	clr.b     w1
     1d12:	01 48 78    	mov.b     w1, [w0]
-                                BD[EP0IN].status = 0xC8;     // send packet as DATA1, set UOWN bit
     1d14:	50 c0 20    	mov.w     #0xc05, w0
     1d16:	81 cc b3    	mov.b     #0xc8, w1
     1d18:	01 48 78    	mov.b     w1, [w0]
-                                break;
     1d1a:	07 00 37    	bra       0x1d2a <.L126>
 
 00001d1c <.L139>:
-                            default:
-                                USB_error_flags |= 0x01;    // set Request Error Flag
     1d1c:	3c c8 bf    	mov.b     0x83c, WREG
     1d1e:	00 04 a0    	bset.b    w0, #0x0
     1d20:	3c e8 b7    	mov.b     WREG, 0x83c
     1d22:	03 00 37    	bra       0x1d2a <.L126>
 
 00001d24 <.L122>:
-                        }
-                    } else {
-                        USB_error_flags |= 0x01;        // set Request Error Flag
     1d24:	3c c8 bf    	mov.b     0x83c, WREG
     1d26:	00 04 a0    	bset.b    w0, #0x0
     1d28:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001d2a <.L126>:
-                    }
-                    break;
     1d2a:	00 00 00    	nop       
-                default:
-                    USB_error_flags |= 0x01;            // set Request Error Flag
-            }
-            break;
     1d2c:	07 00 37    	bra       0x1d3c <.L29>
 
 00001d2e <.L138>:
@@ -3124,33 +2707,22 @@ void StandardRequests(void) {
     1d34:	03 00 37    	bra       0x1d3c <.L29>
 
 00001d36 <.L30>:
-        case SET_DESCRIPTOR:
-        case SYNCH_FRAME:
-        default:
-            USB_error_flags |= 0x01;                    // set Request Error Flag
     1d36:	3c c8 bf    	mov.b     0x83c, WREG
     1d38:	00 04 a0    	bset.b    w0, #0x0
     1d3a:	3c e8 b7    	mov.b     WREG, 0x83c
 
 00001d3c <.L29>:
-    }
-}
     1d3c:	00 80 fa    	ulnk      
     1d3e:	00 00 06    	return    
 
 00001d40 <_ProcessInToken>:
-
-void ProcessInToken(void) {
     1d40:	00 00 fa    	lnk       #0x0
-    switch (USB_USTAT&0xF0) {    // extract the EP bits
     1d42:	3f c8 bf    	mov.b     0x83f, WREG
     1d44:	80 80 fb    	ze        w0, w1
     1d46:	00 0f 20    	mov.w     #0xf0, w0
     1d48:	00 80 60    	and.w     w1, w0, w0
     1d4a:	00 00 e0    	cp0.w     w0
     1d4c:	2b 00 3a    	bra       NZ, 0x1da4 <.L140>
-        case EP0:
-            switch (USB_request.setup.bmRequestType&0x60) {   // extract request type bits
     1d4e:	60 b2 20    	mov.w     #0xb26, w0
     1d50:	10 40 78    	mov.b     [w0], w0
     1d52:	80 80 fb    	ze        w0, w1
@@ -3164,8 +2736,6 @@ void ProcessInToken(void) {
     1d62:	1a 00 32    	bra       Z, 0x1d98 <.L146>
     1d64:	00 00 e0    	cp0.w     w0
     1d66:	1d 00 3a    	bra       NZ, 0x1da2 <.L155>
-                case STANDARD_REQ:
-                    switch (USB_request.setup.bRequest) {
     1d68:	70 b2 20    	mov.w     #0xb27, w0
     1d6a:	10 40 78    	mov.b     [w0], w0
     1d6c:	00 80 fb    	ze        w0, w0
@@ -3173,28 +2743,6 @@ void ProcessInToken(void) {
     1d70:	03 00 32    	bra       Z, 0x1d78 <.L148>
     1d72:	e6 0f 50    	sub.w     w0, #0x6, [w15]
     1d74:	0e 00 32    	bra       Z, 0x1d92 <.L149>
-                        case SET_ADDRESS:
-                            switch (U1ADDR = USB_request.setup.wValue.b[0]) {
-                                case 0:
-                                    USB_USWSTAT = DEFAULT_STATE;
-#ifdef SHOW_ENUM_STATUS
-                                    PORTB &= 0xE0;
-                                    PORTBbits.RB1 = 1;
-#endif
-                                    break;
-                                  default:
-                                    USB_USWSTAT = ADDRESS_STATE;
-#ifdef SHOW_ENUM_STATUS
-                                    PORTB &= 0xE0;
-                                    PORTBbits.RB2 = 1;
-#endif
-                            }
-                            break;
-                        case GET_DESCRIPTOR:
-                            SendDataPacket();
-                            break;
-                    }
-                    break;
     1d76:	13 00 37    	bra       0x1d9e <.L143>
 
 00001d78 <.L148>:
@@ -3224,20 +2772,13 @@ void ProcessInToken(void) {
     1d96:	03 00 37    	bra       0x1d9e <.L143>
 
 00001d98 <.L146>:
-                case CLASS_REQ:
-                    break;
-                case VENDOR_REQ:
-                    VendorRequestsIn();
     1d98:	dc 0a 07    	rcall     0x3352 <_VendorRequestsIn> <L0> <.LFB2> <.LFE1>
-                    break;
     1d9a:	01 00 37    	bra       0x1d9e <.L143>
 
 00001d9c <.L154>:
     1d9c:	00 00 00    	nop       
 
 00001d9e <.L143>:
-            }
-            break;
     1d9e:	00 00 00    	nop       
     1da0:	01 00 37    	bra       0x1da4 <.L140>
 
@@ -3245,16 +2786,11 @@ void ProcessInToken(void) {
     1da2:	00 00 00    	nop       
 
 00001da4 <.L140>:
-    }
-}
     1da4:	00 80 fa    	ulnk      
     1da6:	00 00 06    	return    
 
 00001da8 <_ProcessOutToken>:
-
-void ProcessOutToken(void) {
     1da8:	00 00 fa    	lnk       #0x0
-    switch (USB_USTAT&0xF0) {    // extract the EP bits
     1daa:	3f c8 bf    	mov.b     0x83f, WREG
     1dac:	80 80 fb    	ze        w0, w1
     1dae:	00 0f 20    	mov.w     #0xf0, w0
@@ -3263,8 +2799,6 @@ void ProcessOutToken(void) {
     1db4:	1d 00 3a    	bra       NZ, 0x1df0 <.L156>
 
 00001db6 <.L0>:
-        case EP0:
-            switch (USB_request.setup.bmRequestType&0x60) {   // extract request type bits
     1db6:	60 b2 20    	mov.w     #0xb26, w0
     1db8:	10 40 78    	mov.b     [w0], w0
     1dba:	80 80 fb    	ze        w0, w1
@@ -3278,14 +2812,7 @@ void ProcessOutToken(void) {
     1dca:	04 00 3a    	bra       NZ, 0x1dd4 <.L164>
 
 00001dcc <.L0>:
-                case STANDARD_REQ:
-                    break;
-                case CLASS_REQ:
-                    break;
-                case VENDOR_REQ:
-                    VendorRequestsOut();
     1dcc:	c8 0a 07    	rcall     0x335e <_VendorRequestsOut> <L0> <.LFB3> <.LFE2>
-                    break;
     1dce:	03 00 37    	bra       0x1dd6 <.L159>
 
 00001dd0 <.L163>:
@@ -3296,78 +2823,55 @@ void ProcessOutToken(void) {
     1dd4:	00 00 00    	nop       
 
 00001dd6 <.L159>:
-            }
-            BD[EP0OUT].bytecount = MAX_PACKET_SIZE;
     1dd6:	00 c0 20    	mov.w     #0xc00, w0
     1dd8:	01 c4 b3    	mov.b     #0x40, w1
     1dda:	01 48 78    	mov.b     w1, [w0]
-            BD[EP0OUT].status = 0x88;
     1ddc:	10 c0 20    	mov.w     #0xc01, w0
     1dde:	81 c8 b3    	mov.b     #0x88, w1
     1de0:	01 48 78    	mov.b     w1, [w0]
-            BD[EP0IN].bytecount = 0x00;      // set EP0 IN byte count to 0
     1de2:	40 c0 20    	mov.w     #0xc04, w0
     1de4:	80 40 eb    	clr.b     w1
     1de6:	01 48 78    	mov.b     w1, [w0]
-            BD[EP0IN].status = 0xC8;         // send packet as DATA1, set UOWN bit
     1de8:	50 c0 20    	mov.w     #0xc05, w0
     1dea:	81 cc b3    	mov.b     #0xc8, w1
     1dec:	01 48 78    	mov.b     w1, [w0]
-            break;
     1dee:	00 00 00    	nop       
 
 00001df0 <.L156>:
-    }
-}
     1df0:	00 80 fa    	ulnk      
     1df2:	00 00 06    	return    
 
 00001df4 <_SendDataPacket>:
-
-void SendDataPacket(void) {
     1df4:	02 00 fa    	lnk       #0x2
-    BYTE packet_length, n;
-
-    if (USB_request.bytes_left.w<MAX_PACKET_SIZE) {
     1df6:	81 59 80    	mov.w     0xb30, w1
     1df8:	f0 03 20    	mov.w     #0x3f, w0
     1dfa:	80 8f 50    	sub.w     w1, w0, [w15]
     1dfc:	0b 00 3e    	bra       GTU, 0x1e14 <.L166>
-        packet_length = (BYTE)USB_request.bytes_left.w;
     1dfe:	80 59 80    	mov.w     0xb30, w0
     1e00:	00 4f 78    	mov.b     w0, [w14]
-        USB_request.bytes_left.w = 0;
     1e02:	00 00 eb    	clr.w     w0
     1e04:	80 59 88    	mov.w     w0, 0xb30
-        USB_request.setup.bmRequestType = NO_REQUEST;    // sending a short packet, so clear device request
     1e06:	60 b2 20    	mov.w     #0xb26, w0
     1e08:	80 c0 eb    	setm.b    w1
     1e0a:	01 48 78    	mov.b     w1, [w0]
-        USB_request.setup.bRequest = NO_REQUEST;
     1e0c:	70 b2 20    	mov.w     #0xb27, w0
     1e0e:	80 c0 eb    	setm.b    w1
     1e10:	01 48 78    	mov.b     w1, [w0]
     1e12:	05 00 37    	bra       0x1e1e <.L167>
 
 00001e14 <.L166>:
-    } else {
-        packet_length = MAX_PACKET_SIZE;
     1e14:	00 c4 b3    	mov.b     #0x40, w0
     1e16:	00 4f 78    	mov.b     w0, [w14]
-        USB_request.bytes_left.w -= MAX_PACKET_SIZE;
     1e18:	80 59 80    	mov.w     0xb30, w0
     1e1a:	00 04 b1    	sub.w     #0x40, w0
     1e1c:	80 59 88    	mov.w     w0, 0xb30
 
 00001e1e <.L167>:
-    }
-    for (n = 0; n<packet_length; n++) {
     1e1e:	00 40 eb    	clr.b     w0
     1e20:	10 47 98    	mov.b     w0, [w14+1]
     1e22:	0c 00 37    	bra       0x1e3c <.L168>
 
 00001e24 <.L169>:
-        BD[EP0IN].address[n] = *USB_request.data_ptr++;
     1e24:	31 60 80    	mov.w     0xc06, w1
     1e26:	1e 40 90    	mov.b     [w14+1], w0
     1e28:	00 80 fb    	ze        w0, w0
@@ -3385,11 +2889,8 @@ void SendDataPacket(void) {
     1e3c:	1e 40 90    	mov.b     [w14+1], w0
     1e3e:	9e 4f 50    	sub.b     w0, [w14], [w15]
     1e40:	f1 ff 39    	bra       NC, 0x1e24 <.L169>
-    }
-    BD[EP0IN].bytecount = packet_length;
     1e42:	40 c0 20    	mov.w     #0xc04, w0
     1e44:	1e 48 78    	mov.b     [w14], [w0]
-    BD[EP0IN].status = ((BD[EP0IN].status^0x40)&0x40)|0x88; // toggle the DATA01 bit, clear the PIDs bits, and set the UOWN and DTS bits
     1e46:	50 c0 20    	mov.w     #0xc05, w0
     1e48:	10 40 78    	mov.b     [w0], w0
     1e4a:	00 c0 ea    	com.b     w0, w0
@@ -3400,7 +2901,6 @@ void SendDataPacket(void) {
     1e54:	80 40 78    	mov.b     w0, w1
     1e56:	50 c0 20    	mov.w     #0xc05, w0
     1e58:	01 48 78    	mov.b     w1, [w0]
-}
     1e5a:	00 80 fa    	ulnk      
     1e5c:	00 00 06    	return    
 

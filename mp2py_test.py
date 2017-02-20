@@ -88,12 +88,14 @@ def pwm_control(realT, idealT, change):
     duty = dutyf - dutyr
     print "total duty: ",duty
 
-    new_duty = duty + abs(duty) * fraction 
+    if duty > 0:
+        new_duty = duty + (2**16-1)* fraction
+    else:
+        new_duty = duty - (2**16-1) *fraction
     if new_duty > 2**16-1:
         new_duty = 2**16-1
-    elif new_duty < -(2**16-1):
+    elif new_duty<-(2**16-1):
         new_duty = -(2**16-1)
-
 
     #NEGATIVE VALUE FOR PWM JUST GET BIGGER AND BIGGER
     print "new_duty: ",new_duty
@@ -113,21 +115,21 @@ def pwm_control(realT, idealT, change):
 def wall_control(position):
     # input current angle, ouput desired torque (PWM) 
     torque = torque_get() 
-    threshold_r = -160 
-    threshold_f = -130
+    threshold_r = -15 
+    threshold_f = 15
     if (position <= threshold_r):
-	ideal = 1 #set to "safe" max torque, 30/ 42.4 
+        ideal = 30 #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold r"
         at.set_duty_f(0xF000)
     elif (position >= threshold_f):
-	ideal = -1 #set to "safe" max torque, 30/ 42.4 
+        ideal = -30 #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold f"
         at.set_duty_r(0xF000)
     else: 
         ideal = 0
-        control = False
+        control = True
         print "not past threshold"
         at.set_duty_f(0)
     #print "control:"
@@ -141,7 +143,7 @@ def wall_control(position):
 def spring_control(position):
     torque = torque_get()
     print "torque: ",torque
-    ideal = (position +145) * -1.5 #FIGURE OUT ANGLE SYSTEM
+    ideal = (position) * -0.5 #FIGURE OUT ANGLE SYSTEM
     print "ideal: ",ideal
     pwm_control(torque, ideal, 1)
     print "done"
@@ -169,12 +171,19 @@ def texture_control(position):
     return; 
 
 
-#call functions
+# call functions
 #t = 1
-#while t < 1000000000000000000000000:
 
+#while t < 1000000000000000000000000:
+starting_position = angle_get()
 while True:
     position = angle_get()
+    position = position - starting_position
+    if position > 180:
+        position -= 360
+    elif position < -180:
+        position += 360
+    print('relative position:', position)
 # [speed, position] = speed_get() 
 # print "speed "
 # print speed
@@ -182,7 +191,9 @@ while True:
 # print position
     #wall_control(position)
     #spring_control(position)
-    texture_control(position)
+
+    #texture_control(position)
+
     #t = t+1
 
 
