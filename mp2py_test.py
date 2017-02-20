@@ -119,22 +119,22 @@ def wall_control(position):
         ideal = 30 #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold r"
-        # at.set_duty_f(0xF000)
+        at.set_duty_f(0xF000)
     elif (position >= threshold_f):
         ideal = -30 #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold f"
-        # at.set_duty_r(0xF000)
+        at.set_duty_r(0xF000)
     else: 
         ideal = 0
         control = True
         print "not past threshold"
-        # at.set_duty_f(0)
+        at.set_duty_f(0)
     #print "control:"
     #print control
 
 
-    pwm_control(torque, ideal, control);
+    #pwm_control(torque, ideal, control);
 
     #int ideal, pwm, threshold; 
     # threshold = get_wall_threshold(); // in degrees
