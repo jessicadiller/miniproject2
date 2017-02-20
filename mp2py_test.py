@@ -88,11 +88,13 @@ def pwm_control(realT, idealT, change):
     duty = dutyf - dutyr
     print "total duty: ",duty
 
-    new_duty = duty + abs(duty) * fraction
+    new_duty = duty + abs(duty) * fraction 
     if new_duty > 2**16-1:
         new_duty = 2**16-1
-    elif new_duty<-(2**16-1):
-        new_dut = -(2**16-1)
+    elif new_duty < -(2**16-1):
+        new_duty = -(2**16-1)
+
+
     #NEGATIVE VALUE FOR PWM JUST GET BIGGER AND BIGGER
     print "new_duty: ",new_duty
     print "{0:b}".format(int(new_duty))
@@ -117,33 +119,23 @@ def wall_control(position):
 	ideal = 1 #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold r"
-        # at.set_duty_f(0xF000)
+        at.set_duty_f(0xF000)
     elif (position >= threshold_f):
 	ideal = -1 #set to "safe" max torque, 30/ 42.4 
         control = True
         print "past threshold f"
-        # at.set_duty_r(0xF000)
+        at.set_duty_r(0xF000)
     else: 
         ideal = 0
         control = False
         print "not past threshold"
-        # at.set_duty_f(0)
+        at.set_duty_f(0)
     #print "control:"
     #print control
 
 
-    pwm_control(torque, ideal, control);
+    # pwm_control(torque, ideal, control);
 
-    #int ideal, pwm, threshold; 
-    # threshold = get_wall_threshold(); // in degrees
-    #duty.w = pin_read(&D[7]); 
-    #if (duty.w == 0x0){
-    #  duty.w = pin_read(&D[8]);
-    #}
-    #pwm = duty.b[0]+duty.b[1]*256; //combines bytes into integer
-     #pin_write(&D[8], 0x0);
-     #pin_write(&D[7], 0x0);
-    #} 
     return;
 
 #spring_control
@@ -159,6 +151,19 @@ def spring_control(position):
 
 #damper_control
 #texture_control
+def texture_control(position):
+    # 5 deg increment "ratchet"
+    rel = position%10
+    torque = torque_get()
+    if rel < 5:
+        ideal = 0
+    elif rel > 5: 
+        ideal = 15
+    else: 
+        ideal = 15
+
+    return; 
+
 
 #call functions
 #t = 1
@@ -171,9 +176,9 @@ while True:
 # print speed
 # print "; position "
 # print position
-    wall_control(position)
+    # wall_control(position)
     #spring_control(position)
-
+    texture_control(position)
     #t = t+1
 
 
