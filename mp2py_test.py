@@ -152,15 +152,20 @@ def spring_control(position):
 #texture_control
 def texture_control(position):
     # 5 deg increment "ratchet"
-    rel = position%10
+    rel = abs(position)%10
+    print rel
     torque = torque_get()
     if rel < 5:
         ideal = 0
+        at.set_duty_r(0x0000)
+        print "setting zero"
     elif rel > 5: 
         ideal = 15
+        at.set_duty_f(0xF000)
+        print "bump"
     else: 
         ideal = 15
-
+    # pwm_control(torque, ideal, control)
     return; 
 
 
@@ -175,7 +180,7 @@ while True:
 # print speed
 # print "; position "
 # print position
-    # wall_control(position)
+    #wall_control(position)
     #spring_control(position)
     texture_control(position)
     #t = t+1
