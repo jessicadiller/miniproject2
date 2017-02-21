@@ -27,7 +27,6 @@
 #define ANALOG_MASK       0XC0
 
 WORD angle, old_angle;
-//uint16_t val1, val2;
 
 //void ClassRequests(void) {
 //    switch (USB_setup.bRequest) {
@@ -168,12 +167,6 @@ int16_t main(void) {
     init_oc();
     init_spi();
     init_timer();
-    //WORD first;
-    //WORD second;
-    //WORD diff;
-
-    //angle.b[0] = 00000000;
-    //angle.b[1] = 00000000;
   
     ANG_MOSI = &D[0];
     ANG_MISO = &D[1];
@@ -191,7 +184,6 @@ int16_t main(void) {
     oc_pwm(&oc2, &D[8], NULL, 20e3, 0x0);
 
     led_on(&led1);
-    led_on(&led2);
     timer_setPeriod(&timer2, 1);
     timer_start(&timer2);
 
@@ -211,9 +203,6 @@ int16_t main(void) {
             led_toggle(&led1); //switch LED1 from on to off and vice versa
             old_angle = angle;
             enc_read_reg((WORD)REG_ANG_ADDR);
-            //enc_read_reg((WORD)REG_ANG_ADDR);
-            //enc_read_reg((WORD)REG_ANG_ADDR);
-
         }
     }
 }
