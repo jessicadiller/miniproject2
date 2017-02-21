@@ -1,7 +1,7 @@
 import time
 import miniproject2 as mp
 
-at = mp.jtest()
+#at = mp.jtest()
 
 def set_period():
     #call vendor request?
@@ -193,7 +193,7 @@ def texture_control(position):
 #[speed, position] = speed_get()
 #position = angle_get()
 #damper_control(speed, position)
-while True:
+
     #position = angle_get()
     #position = position - starting_position
     #if position > 180:
@@ -201,8 +201,9 @@ while True:
     #elif position < -180:
     #    position += 360
     #print('relative position:', position)
-    [speed, position] = speed_get() 
-    damper_control(speed, position)
+
+    #[speed, position] = speed_get() 
+    #damper_control(speed, position)
     #wall_control(position)
     #spring_control(position)
 
@@ -212,3 +213,72 @@ while True:
 
 
 
+def mode_select():
+    print "Please input the number of the mode you want."
+    print "Wall: 1, Spring: 2, Damper: 3, Texture: 4"
+    mode = raw_input("Enter your new mode number: ")   
+    if mode == '1':
+        print "You selected Wall mode!"
+        y = 1
+    elif mode == '2':
+        print "You selected Spring mode!"
+        y = 2
+    elif mode == '3':
+        print "You selected Damper mode!"
+        y = 3
+    elif mode == '4':
+        print "You selected Texture mode!"
+        y = 4
+    else: 
+        print "You selected a value outside the mode range."
+        y = 0
+    return y
+
+print "Hello and welcome!"
+print "If you wish to change modes, please hit ctrl+c."
+print "If you wish to exit, please hit ctrl+c twice."
+y = 0
+while True:
+    try:
+        x = 0
+        if y == 0:
+            y = mode_select()
+        elif y == 1:
+            while x == 0:
+                try: 
+                    #position = angle_get()
+                    #wall_control(position)
+                    print "call wall function"
+                except KeyboardInterrupt:
+                    x = 1
+                    y = mode_select()
+        elif y == 2:
+             while x == 0:
+                try: 
+                    #position = angle_get()
+                    #spring_control(position)
+                    print "call spring function"
+                except KeyboardInterrupt:
+                    x = 1
+                    y = mode_select()
+        elif y == 3:
+             while x == 0:
+                try: 
+                    #[speed, position] = speed_get()
+                    #damper_control(speed, position)
+                    print "call damper function"
+                except KeyboardInterrupt:
+                    x = 1
+                    y = mode_select()
+        elif y == 4:
+             while x == 0:
+                try: 
+                    #position = angle_get()
+                    #texture_control(position)
+                    print "call texture function"
+                except KeyboardInterrupt:
+                    x = 1
+                    y = mode_select()
+    except KeyboardInterrupt:
+        y = mode_select()
+        
