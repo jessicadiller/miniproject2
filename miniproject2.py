@@ -89,7 +89,7 @@ class jtest:
 
     def get_angle_speed(self):
         try:
-            ret = self.dev.ctrl_transfer(0xC0, self.GET_ANGLE, 0, 0, 4)
+            ret = self.dev.ctrl_transfer(0xC0, self.GET_ANGLE_SPEED, 0, 0, 4)
         except usb.core.USBError:
             print "Could not send GET_ANGLE_SPEED vendor request."
         else:

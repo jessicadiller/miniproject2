@@ -26,7 +26,7 @@
 #define SENSOR_MASK       0X3F
 #define ANALOG_MASK       0XC0
 
-WORD angle, old_angle;
+WORD angle0, angle1;
 
 //void ClassRequests(void) {
 //    switch (USB_setup.bRequest) {
@@ -40,7 +40,7 @@ _PIN *ANG_NCS;
 _PIN *CURR_P;
 
 WORD enc_read_reg(WORD registeraddress) {
-    WORD cmd;
+    WORD cmd, angle;
     cmd.w = 0x4000|registeraddress.w; //set 2nd MSB to 1 for a read
     cmd.w |= parity(cmd.w)<<15; //calculate even parity for
 
@@ -54,13 +54,14 @@ WORD enc_read_reg(WORD registeraddress) {
     angle.b[0] = spi_transfer(&spi1, 0);
     pin_set(ANG_NCS);
     angle.b[1] = angle.b[1]&0b00111111; //MASK
-    return;
+    return angle;
 }
 
 void VendorRequests(void) {
     WORD32 address;
     WORD temp;
     WORD vout;
+    WORD angle;
     
     switch (USB_setup.bRequest) {
         case TOGGLE_LED1:
@@ -107,7 +108,7 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case GET_ANGLE:
-            enc_read_reg((WORD)REG_ANG_ADDR);
+            angle = enc_read_reg((WORD)REG_ANG_ADDR);
             //angle0.b[1] = angle0.b[1]&0b00111111;
             // angle1 = enc_read_reg((WORD)REG_ANG_ADDR);
             // angle1.b[1] = angle1.b[1]&0b00111111;
@@ -127,11 +128,11 @@ void VendorRequests(void) {
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
         case GET_ANGLE_SPEED:
-            BD[EP0IN].address[0] = old_angle.b[0]; 
-            BD[EP0IN].address[1] = old_angle.b[1];
-            BD[EP0IN].address[2] = angle.b[0]; 
-            BD[EP0IN].address[3] = angle.b[1];
-            BD[EP0IN].bytecount = 4;    // set EP0 IN byte count to 2
+            BD[EP0IN].address[0] = angle0.b[0]; 
+            BD[EP0IN].address[1] = angle0.b[1];
+            BD[EP0IN].address[2] = angle1.b[0]; 
+            BD[EP0IN].address[3] = angle1.b[1];
+            BD[EP0IN].bytecount = 4;    // set EP0 IN byte count to 4
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
         case GET_CURRENT:
             vout.w = pin_read(CURR_P);
@@ -176,6 +177,7 @@ int16_t main(void) {
 
     pin_analogIn(CURR_P);
     pin_digitalOut(ANG_NCS);
+
     pin_set(ANG_NCS);
     
     spi_open(&spi1, ANG_MISO, ANG_MOSI, ANG_SCK, 2e6, 1);
@@ -184,13 +186,11 @@ int16_t main(void) {
     oc_pwm(&oc2, &D[8], NULL, 20e3, 0x0);
 
     led_on(&led1);
-    timer_setPeriod(&timer2, 1);
+    timer_setPeriod(&timer2, 0.001);
     timer_start(&timer2);
 
-    old_angle.b[0] = 0b11111111;
-    old_angle.b[1] = 0b11111111;
-    angle.b[0] = 0b01010101;
-    angle.b[1] = 0b10101010;
+    angle0 = enc_read_reg((WORD)REG_ANG_ADDR);
+    angle1 = enc_read_reg((WORD)REG_ANG_ADDR);
 
     InitUSB();                              // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
@@ -201,8 +201,8 @@ int16_t main(void) {
         if (timer_flag(&timer2)) { //periodically:
             timer_lower(&timer2);
             led_toggle(&led1); //switch LED1 from on to off and vice versa
-            old_angle = angle;
-            enc_read_reg((WORD)REG_ANG_ADDR);
+            angle0 = angle1;
+            angle1 = enc_read_reg((WORD)REG_ANG_ADDR);
         }
     }
 }
